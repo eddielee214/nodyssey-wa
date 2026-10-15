@@ -7,14 +7,17 @@ import io.github.nodyssey.data.MutableClock
 import io.github.nodyssey.data.NoReadingPositions
 import io.github.nodyssey.data.OfflineFirstPostRepository
 import io.github.nodyssey.data.PostRepository
+import io.github.nodyssey.data.ProfileRepository
 import io.github.nodyssey.data.ReadingPosition
 import io.github.nodyssey.data.ReadingPositionStore
 import io.github.nodyssey.data.TrackedThreadStore
+import io.github.nodyssey.data.UserProfile
 import io.github.nodyssey.data.inMemoryDatabase
 import io.github.nodyssey.data.local.NodeSeekDatabase
 import io.github.nodyssey.data.local.toEntity
 import io.github.nodyssey.data.session.SessionState
 import io.github.nodyssey.model.ReactionAction
+import io.github.plaza.core.AppClock
 import io.github.plaza.core.net.SiteError
 import io.github.plaza.core.net.SiteException
 import kotlinx.coroutines.CompletableDeferred
@@ -69,6 +72,8 @@ class PostDetailViewModelTest {
         preview: ThreadPreview? = null,
         readingPositions: ReadingPositionStore = NoReadingPositions,
         trackedThreads: TrackedThreadStore? = null,
+        profiles: ProfileRepository? = null,
+        clock: AppClock = this.clock,
     ) = PostDetailViewModel(
         postId,
         repository,
@@ -78,6 +83,8 @@ class PostDetailViewModelTest {
         preview,
         readingPositions = readingPositions,
         trackedThreads = trackedThreads,
+        profiles = profiles,
+        clock = clock,
     )
 
     /**
@@ -1080,6 +1087,29 @@ class PostDetailViewModelTest {
 
             vm.onCollectFailureShown()
             assertNull(vm.uiState.value.collectFailure)
+        }
+
+    @Test
+    fun `fetches the opening post author's level and joined days`() =
+        runTest(dispatcher) {
+            val profiles =
+                object : ProfileRepository {
+                    override suspend fun profile(refresh: Boolean): UserProfile = error("unused")
+
+                    override suspend fun profile(uid: Long): UserProfile =
+                        UserProfile(
+                            uid = uid,
+                            name = "op",
+                            avatarUrl = "",
+                            rank = 1,
+                            createdAt = "2026-07-01T00:00:00.000Z",
+                        )
+                }
+            val vm = viewModel(profiles = profiles, clock = AppClock { 1_784_980_800_000L })
+            advanceUntilIdle()
+
+            assertEquals(1, vm.uiState.value.authorLevel)
+            assertEquals(24, vm.uiState.value.authorJoinedDays)
         }
 }
 

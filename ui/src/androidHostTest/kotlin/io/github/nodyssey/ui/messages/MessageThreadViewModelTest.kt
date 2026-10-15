@@ -7,6 +7,8 @@ import io.github.nodyssey.data.DirectMessage
 import io.github.nodyssey.data.MessageRepository
 import io.github.nodyssey.data.MessageThread
 import io.github.nodyssey.data.NotificationRepository
+import io.github.nodyssey.data.ProfileRepository
+import io.github.nodyssey.data.UserProfile
 import io.github.nodyssey.data.composer.ImageUploader
 import io.github.nodyssey.data.session.FakeSessionCookieStore
 import io.github.nodyssey.data.session.SessionRepository
@@ -57,6 +59,34 @@ class MessageThreadViewModelTest {
 
             advanceUntilIdle()
             assertEquals(NodeSeekSite.avatarUrl(4471), viewModel.uiState.value.avatarUrl)
+        }
+
+    @Test
+    fun `falls back to the public profile for joined days when the thread omits createdAt`() =
+        runTest(dispatcher) {
+            val profiles =
+                object : ProfileRepository {
+                    override suspend fun profile(refresh: Boolean): UserProfile = error("unused")
+
+                    override suspend fun profile(uid: Long): UserProfile =
+                        UserProfile(
+                            uid = uid,
+                            name = "iwil",
+                            avatarUrl = "",
+                            rank = 1,
+                            createdAt = "2026-07-15T00:00:00.000Z",
+                        )
+                }
+            val viewModel =
+                viewModel(
+                    FakeMessageRepository(level = null),
+                    profiles = profiles,
+                    clock = AppClock { 1_784_980_800_000L },
+                )
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.uiState.value.level)
+            assertEquals(10, viewModel.uiState.value.joinedDays)
         }
 
     @Test
@@ -209,14 +239,17 @@ class MessageThreadViewModelTest {
     private fun viewModel(
         repository: MessageRepository,
         notifications: NotificationRepository = NotificationRepository(FakeCountsApi()),
+        profiles: ProfileRepository? = null,
+        clock: AppClock = AppClock { NOW },
     ) = MessageThreadViewModel(
         repository = repository,
         notifications = notifications,
         session = SessionRepository(SessionCookies(NodeSeekSite.CONFIG, cookies)),
-        clock = AppClock { NOW },
+        clock = clock,
         uploader = ImageUploader { _, _ -> "https://cdn.nodeimage.com/i/x.webp" },
         uid = 4471,
         userName = "iwil",
+        profiles = profiles,
     )
 
     private companion object {
@@ -236,6 +269,7 @@ private class FakeCountsApi(
 private class FakeMessageRepository(
     var sendError: Throwable? = null,
     private val unreadIds: List<Long> = emptyList(),
+    private val level: Int? = 4,
 ) : MessageRepository {
     var sendCount = 0
     var lastContent: String? = null
@@ -254,7 +288,7 @@ private class FakeMessageRepository(
             uid = uid,
             userName = "iwil",
             avatarUrl = null,
-            level = 4,
+            level = level,
             messages =
             listOf(
                 DirectMessage(

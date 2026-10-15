@@ -10,6 +10,7 @@ import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.data.FreeChickenLegs
 import io.github.nodyssey.data.NoReadingPositions
 import io.github.nodyssey.data.PostRepository
+import io.github.nodyssey.data.ProfileRepository
 import io.github.nodyssey.data.ReadingPosition
 import io.github.nodyssey.data.ReadingPositionStore
 import io.github.nodyssey.data.TrackedThreadStore
@@ -19,6 +20,8 @@ import io.github.nodyssey.model.PostContent
 import io.github.nodyssey.model.ReactionAction
 import io.github.nodyssey.model.ThreadSnapshot
 import io.github.nodyssey.ui.postlist.toSiteError
+import io.github.nodyssey.ui.space.joinedDays
+import io.github.plaza.core.AppClock
 import io.github.plaza.core.net.SiteError
 import io.github.plaza.core.net.SiteException
 import io.github.plaza.core.runCatchingExceptCancellation
@@ -75,6 +78,12 @@ class PostDetailViewModel(
     private val readingPositions: ReadingPositionStore = NoReadingPositions,
     /** 追踪新回复; absent in a test that does not care, which also hides the menu item. */
     private val trackedThreads: TrackedThreadStore? = null,
+    /**
+     * Reads `/api/account/getInfo/{uid}` for the opening post's author so the header can show
+     * `Lv.X` and `加入 X 天` alongside `楼主`.
+     */
+    private val profiles: ProfileRepository? = null,
+    private val clock: AppClock = AppClock.System,
 ) : ViewModel() {
     private val _uiState =
         MutableStateFlow(
@@ -88,6 +97,8 @@ class PostDetailViewModel(
     val uiState: StateFlow<PostDetailUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+    private var authorProfileJob: Job? = null
+    private var fetchedAuthorUid: Long? = null
 
     /** Where the reader is *now*, reported by the screen as it scrolls. See [recordReadingPosition]. */
     private val readingPosition = MutableStateFlow<ReadingPosition?>(null)
@@ -116,6 +127,8 @@ class PostDetailViewModel(
                     // thread opened from a notification looks like for the length of its first fetch.
                     // Clearing the floor here threw away the one thing that read was opened for,
                     // before the floors it named could possibly have arrived.
+                    fetchedAuthorUid = null
+                    authorProfileJob?.cancel()
                     _uiState.update {
                         it.copy(
                             title = preview?.title.orEmpty(),
@@ -129,6 +142,8 @@ class PostDetailViewModel(
                             collected = null,
                             collectionCount = null,
                             isAwarded = preview?.isAwarded == true,
+                            authorLevel = null,
+                            authorJoinedDays = null,
                         )
                     }
                     return@collect
@@ -152,6 +167,7 @@ class PostDetailViewModel(
                         isAwarded = thread.isAwarded == true,
                     )
                 }
+                loadAuthorProfileIfNeeded(thread.body?.authorUid)
 
                 // "Read" means content actually reached the screen — which is exactly this emission,
                 // and the only signal that covers all the ways it can happen: a fresh fetch, a cache
@@ -197,6 +213,7 @@ class PostDetailViewModel(
                     )
                 if (sessionState.isSignedIn && !cleared) repository.invalidateCaches()
                 refresh()
+                loadAuthorProfileIfNeeded(_uiState.value.body?.authorUid)
             }.launchIn(viewModelScope)
 
         // The stored place is read *before* this read starts writing over it, and then held for the
@@ -214,6 +231,27 @@ class PostDetailViewModel(
                 .debounce(POSITION_WRITE_DELAY_MILLIS)
                 .collect { position -> readingPositions.setReadingPosition(postId, position) }
         }
+    }
+
+    private fun loadAuthorProfileIfNeeded(uid: Long?) {
+        val repo = profiles ?: return
+        if (uid == null || uid <= 0 || uid == fetchedAuthorUid) return
+        fetchedAuthorUid = uid
+        authorProfileJob?.cancel()
+        authorProfileJob =
+            viewModelScope.launch {
+                runCatchingExceptCancellation { repo.profile(uid) }
+                    .onSuccess { profile ->
+                        _uiState.update {
+                            it.copy(
+                                authorLevel = profile.rank,
+                                authorJoinedDays = joinedDays(profile.createdAt, clock.nowMillis()),
+                            )
+                        }
+                    }.onFailure {
+                        fetchedAuthorUid = null
+                    }
+            }
     }
 
     /**
@@ -653,6 +691,8 @@ class PostDetailViewModel(
                         container.settingsRepository.showBlockedContent,
                         container.readingPositionStore,
                         container.trackedThreadStore,
+                        container.profileRepository,
+                        container.clock,
                     )
                 }
             }
@@ -734,6 +774,10 @@ data class PostDetailUiState(
     val tracked: Boolean? = null,
     /** What the last 追踪新回复 tap came to, held until the screen has said so once. */
     val trackMessage: TrackMessage? = null,
+    /** The original poster's rank from `/api/account/getInfo/{uid}`, when known. */
+    val authorLevel: Int? = null,
+    /** Whole days since the original poster registered, when known. */
+    val authorJoinedDays: Int? = null,
 ) {
     /**
      * Whether there is a thread on screen to read and act on.

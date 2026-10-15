@@ -1607,4 +1607,12 @@
     <string name="sticker_image_open">Open in browser</string>
     <string name="sticker_image_link_copied">Image link copied</string>
     <!-- sticker:end -->
+    <string name="post_author_joined_days">Joined %1$d d</string>
+    <string name="messages_thread_joined_days">Joined %1$d d</string>
+    <string name="messages_scam_warning_title">Trading risk warning</string>
+    <string name="messages_scam_caution_title">Anti-scam reminder</string>
+    <string name="messages_scam_warning_both">This account has a low level (Lv.%1$d) and registered less than 100 days ago (%2$d d). Private message scams are common — avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
+    <string name="messages_scam_warning_low_level">This account has a low level (Lv.%1$d). Private message scams are common — avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
+    <string name="messages_scam_warning_new_account">This account registered less than 100 days ago (%1$d d). Private message scams are common — avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
+    <string name="messages_scam_caution_general">Private message scams are common, and even high-level or older accounts may be compromised. Avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
 </resources>

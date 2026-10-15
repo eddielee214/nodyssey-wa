@@ -72,6 +72,8 @@ data class MessageThread(
      * them the moment it renders.
      */
     val unreadIds: List<Long> = emptyList(),
+    /** The other side's registration timestamp when `talkTo` included one. */
+    val createdAt: String? = null,
 )
 
 interface MessageRepository {
@@ -165,6 +167,7 @@ class NetworkMessageRepository(
             messages.mapNotNull { raw ->
                 raw.id?.toLongOrNull()?.takeIf { !raw.viewed && raw.senderId == uid }
             },
+            createdAt = header?.text("created_at", "createdAt", "registered_at", "created_at_str"),
         )
     }
 

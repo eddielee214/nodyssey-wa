@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,6 +94,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.core.NodeSeekStickers
+import io.github.nodyssey.data.MessageConversation
 import io.github.nodyssey.data.composer.ImageAttachment
 import io.github.nodyssey.data.composer.PickedImage
 import io.github.nodyssey.data.contentPreview
@@ -125,16 +127,25 @@ import io.github.nodyssey.ui.resources.message_status_sent
 import io.github.nodyssey.ui.resources.message_thread_empty
 import io.github.nodyssey.ui.resources.message_thread_open_space
 import io.github.nodyssey.ui.resources.message_thread_subtitle
-import io.github.nodyssey.ui.resources.message_thread_subtitle_level
 import io.github.nodyssey.ui.resources.message_thread_title
 import io.github.nodyssey.ui.resources.message_thread_title_unknown
 import io.github.nodyssey.ui.resources.message_tool_customize
 import io.github.nodyssey.ui.resources.message_tools
+import io.github.nodyssey.ui.resources.messages_scam_caution_general
+import io.github.nodyssey.ui.resources.messages_scam_caution_title
+import io.github.nodyssey.ui.resources.messages_scam_warning_both
+import io.github.nodyssey.ui.resources.messages_scam_warning_low_level
+import io.github.nodyssey.ui.resources.messages_scam_warning_new_account
+import io.github.nodyssey.ui.resources.messages_scam_warning_title
+import io.github.nodyssey.ui.resources.messages_thread_joined_days
 import io.github.nodyssey.ui.resources.notification_time_pair
 import io.github.nodyssey.ui.richtext.PostRichContent
 import io.github.plaza.core.TimeFormat
 import io.github.plaza.core.richtext.parseMarkdown
+import io.github.plaza.designsys.component.BadgeChip
+import io.github.plaza.designsys.component.BadgeTone
 import io.github.plaza.designsys.component.EditorTextField
+import io.github.plaza.designsys.component.InlineBanner
 import io.github.plaza.designsys.component.LayerCardShape
 import io.github.plaza.designsys.component.LayerPageGutter
 import io.github.plaza.designsys.component.LoadingState
@@ -152,6 +163,7 @@ import io.github.plaza.designsys.editor.emojiPanelScope
 import io.github.plaza.designsys.editor.icon
 import io.github.plaza.designsys.editor.label
 import io.github.plaza.designsys.editor.rememberMarkdownEditorState
+import io.github.plaza.designsys.theme.LocalPlazaExtraColors
 import io.github.plaza.designsys.theme.LocalPlazaLayers
 import io.github.plaza.designsys.theme.PlazaTheme
 import io.github.plaza.designsys.theme.Sizes
@@ -261,6 +273,11 @@ fun MessageThreadScreen(
         // The bottom is taken as `paddingWithKeyboard` takes it, for the reason given there.
         val topClearance = padding.calculateTopPadding()
         val direction = LocalLayoutDirection.current
+        val showScamBanner =
+            state.userName != MessageConversation.SYSTEM_NAME &&
+                (!state.isLoading || state.messages.isNotEmpty()) &&
+                (state.error == null || state.messages.isNotEmpty())
+        val effectiveTopClearance = if (showScamBanner) 0.dp else topClearance
         Column(
             Modifier
                 // The sides as well as the bottom: `consumeWindowInsets` below takes all of
@@ -275,15 +292,27 @@ fun MessageThreadScreen(
                 .imePadding()
                 .fillMaxSize(),
         ) {
+            if (showScamBanner) {
+                ScamReminderBanner(
+                    state = state,
+                    modifier =
+                    Modifier.padding(
+                        top = topClearance + Spacing.xs,
+                        start = LayerPageGutter,
+                        end = LayerPageGutter,
+                        bottom = Spacing.xs,
+                    ),
+                )
+            }
             // fillMaxWidth, or the box is only as wide as whatever is inside it — which for the
             // empty state is one line of text, and centring inside that put it against the left edge.
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     state.isLoading && state.messages.isEmpty() ->
-                        LoadingState(Modifier.padding(top = topClearance))
+                        LoadingState(Modifier.padding(top = effectiveTopClearance))
 
                     state.error != null && state.messages.isEmpty() ->
-                        Box(Modifier.padding(top = topClearance)) {
+                        Box(Modifier.padding(top = effectiveTopClearance)) {
                             SiteErrorState(
                                 error = state.error,
                                 onRetry = onRetryLoad,
@@ -306,7 +335,7 @@ fun MessageThreadScreen(
                                 .padding(horizontal = Spacing.xl),
                         )
 
-                    else -> MessageBubbles(state, topClearance, onLinkClick, onRetrySend, onQuote)
+                    else -> MessageBubbles(state, effectiveTopClearance, onLinkClick, onRetrySend, onQuote)
                 }
             }
             MessageComposer(
@@ -336,6 +365,53 @@ fun MessageThreadScreen(
             onDismiss = { customizing = false },
         )
     }
+}
+
+/**
+ * Anti-scam reminder strip shown at the top of every non-system private message thread:
+ * - Red (`errorContainer`) when the peer is Lv.0/Lv.1 or joined < 100 days ago.
+ * - Amber (`warningContainer`) for all other conversations as a general precaution.
+ */
+@Composable
+private fun ScamReminderBanner(
+    state: MessageThreadUiState,
+    modifier: Modifier = Modifier,
+) {
+    val lowLevel = state.level?.takeIf { it in 0..1 }
+    val newAccountDays = state.joinedDays?.takeIf { it in 0..<100 }
+    val isHighRisk = lowLevel != null || newAccountDays != null
+    val extra = LocalPlazaExtraColors.current
+    val title: String
+    val body: String
+    val containerColor =
+        if (isHighRisk) MaterialTheme.colorScheme.errorContainer else extra.warningContainer
+    val contentColor =
+        if (isHighRisk) MaterialTheme.colorScheme.onErrorContainer else extra.onWarningContainer
+    if (isHighRisk) {
+        title = stringResource(Res.string.messages_scam_warning_title)
+        body =
+            when {
+                lowLevel != null && newAccountDays != null ->
+                    stringResource(Res.string.messages_scam_warning_both, lowLevel, newAccountDays)
+
+                lowLevel != null ->
+                    stringResource(Res.string.messages_scam_warning_low_level, lowLevel)
+
+                else ->
+                    stringResource(Res.string.messages_scam_warning_new_account, newAccountDays!!)
+            }
+    } else {
+        title = stringResource(Res.string.messages_scam_caution_title)
+        body = stringResource(Res.string.messages_scam_caution_general)
+    }
+    InlineBanner(
+        text = body,
+        title = title,
+        icon = Icons.Default.Warning,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        modifier = modifier,
+    )
 }
 
 /**
@@ -417,14 +493,42 @@ private fun ThreadTopBar(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            Text(
-                                text =
-                                state.level?.let {
-                                    stringResource(Res.string.message_thread_subtitle_level, state.uid, it)
-                                } ?: stringResource(Res.string.message_thread_subtitle, state.uid),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.message_thread_subtitle, state.uid),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                )
+                                state.level?.let { level ->
+                                    if (level in 0..1) {
+                                        BadgeChip(text = "Lv.$level", tone = BadgeTone.Warning)
+                                    } else {
+                                        Text(
+                                            text = "· Lv.$level",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
+                                state.joinedDays?.let { days ->
+                                    val joinedLabel = stringResource(Res.string.messages_thread_joined_days, days)
+                                    if (days in 0..<100) {
+                                        BadgeChip(text = joinedLabel, tone = BadgeTone.Warning)
+                                    } else {
+                                        Text(
+                                            text = "· $joinedLabel",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 },

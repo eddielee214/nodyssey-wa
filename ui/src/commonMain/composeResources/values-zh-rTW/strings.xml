@@ -1599,4 +1599,12 @@
     <string name="sticker_image_open">在瀏覽器開啟</string>
     <string name="sticker_image_link_copied">已複製圖片連結</string>
     <!-- sticker:end -->
+    <string name="post_author_joined_days">加入 %1$d 天</string>
+    <string name="messages_thread_joined_days">加入 %1$d 天</string>
+    <string name="messages_scam_warning_title">交易風險提示</string>
+    <string name="messages_scam_caution_title">防詐安全提醒</string>
+    <string name="messages_scam_warning_both">對方等級較低（Lv.%1$d）、註冊時間不足 100 天（%2$d 天）。近期私訊詐騙頻發，請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
+    <string name="messages_scam_warning_low_level">對方等級較低（Lv.%1$d）。近期私訊詐騙頻發，請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
+    <string name="messages_scam_warning_new_account">對方註冊時間不足 100 天（%1$d 天）。近期私訊詐騙頻發，請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
+    <string name="messages_scam_caution_general">近期私訊詐騙頻發，高等級或老帳號亦可能存在被盜風險。請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
 </resources>

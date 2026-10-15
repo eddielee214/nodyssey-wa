@@ -10,9 +10,11 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.data.DirectMessage
+import io.github.nodyssey.data.MessageConversation
 import io.github.nodyssey.data.MessageRepository
 import io.github.nodyssey.data.NotificationCategory
 import io.github.nodyssey.data.NotificationRepository
+import io.github.nodyssey.data.ProfileRepository
 import io.github.nodyssey.data.composer.ImageAttachment
 import io.github.nodyssey.data.composer.ImageUploadQueue
 import io.github.nodyssey.data.composer.ImageUploader
@@ -24,6 +26,7 @@ import io.github.nodyssey.data.settings.SettingsRepository
 import io.github.nodyssey.di.AppContainer
 import io.github.nodyssey.ui.composer.EditorActions
 import io.github.nodyssey.ui.postlist.toSiteError
+import io.github.nodyssey.ui.space.joinedDays
 import io.github.plaza.core.AppClock
 import io.github.plaza.core.net.SiteError
 import io.github.plaza.core.net.SiteException
@@ -63,6 +66,11 @@ class MessageThreadViewModel(
     userName: String,
     /** Null in tests; the bar then shows [EditorActions.Message] and offers no wrench. */
     private val settings: SettingsRepository? = null,
+    /**
+     * Fallback for `level` and `joinedDays` when `message/with/{uid}` omits `created_at` (or when a
+     * new conversation has no `talkTo` object yet).
+     */
+    private val profiles: ProfileRepository? = null,
 ) : ViewModel() {
     // The avatar is known from the uid alone — it is the URL the thread itself answers with — so the
     // header draws the picture from the first frame. Left for the fetch, it drew the initial first and
@@ -149,6 +157,9 @@ class MessageThreadViewModel(
                 _uiState.update { it.copy(isLoading = true, error = null) }
                 runCatchingExceptCancellation { repository.thread(_uiState.value.uid) }
                     .onSuccess { thread ->
+                        val now = clock.nowMillis()
+                        val threadJoinedDays = joinedDays(thread.createdAt, now)
+                        val resolvedName = thread.userName.ifBlank { _uiState.value.userName }
                         _uiState.update { state ->
                             state.copy(
                                 // The server list replaces the delivered history but must not drop a
@@ -156,15 +167,34 @@ class MessageThreadViewModel(
                                 messages =
                                 thread.messages.map(::delivered) +
                                     state.messages.filter { it.status != SendStatus.SENT },
-                                userName = thread.userName.ifBlank { state.userName },
+                                userName = resolvedName,
                                 avatarUrl = thread.avatarUrl ?: state.avatarUrl,
-                                level = thread.level,
+                                level = thread.level ?: state.level,
+                                joinedDays = threadJoinedDays ?: state.joinedDays,
                                 isLoading = false,
                                 error = null,
-                                nowMillis = clock.nowMillis(),
+                                nowMillis = now,
                             )
                         }
                         markRead(thread.unreadIds)
+                        val current = _uiState.value
+                        if (
+                            profiles != null &&
+                            current.uid > 0 &&
+                            resolvedName != MessageConversation.SYSTEM_NAME &&
+                            (current.level == null || current.joinedDays == null)
+                        ) {
+                            runCatchingExceptCancellation { profiles.profile(current.uid) }
+                                .onSuccess { profile ->
+                                    _uiState.update { state ->
+                                        state.copy(
+                                            level = state.level ?: profile.rank,
+                                            joinedDays =
+                                            state.joinedDays ?: joinedDays(profile.createdAt, clock.nowMillis()),
+                                        )
+                                    }
+                                }
+                        }
                     }.onFailure { throwable ->
                         _uiState.update {
                             it.copy(isLoading = false, error = throwable.toSiteError())
@@ -319,6 +349,7 @@ class MessageThreadViewModel(
                         uid = uid,
                         userName = userName,
                         settings = container.settingsRepository,
+                        profiles = container.profileRepository,
                     )
                 }
             }
@@ -358,6 +389,7 @@ data class MessageThreadUiState(
     val userName: String,
     val avatarUrl: String? = null,
     val level: Int? = null,
+    val joinedDays: Int? = null,
     val messages: List<MessageBubble> = emptyList(),
     val isLoading: Boolean = false,
     val error: SiteError? = null,

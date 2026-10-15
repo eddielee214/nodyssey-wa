@@ -154,6 +154,7 @@ import io.github.nodyssey.ui.resources.page_jump_at_page
 import io.github.nodyssey.ui.resources.page_jump_at_page_floor
 import io.github.nodyssey.ui.resources.page_jump_latest
 import io.github.nodyssey.ui.resources.page_jump_resume_title
+import io.github.nodyssey.ui.resources.post_author_joined_days
 import io.github.nodyssey.ui.resources.post_auto_paging
 import io.github.nodyssey.ui.resources.post_badge_awarded
 import io.github.nodyssey.ui.resources.post_badge_original_poster
@@ -205,6 +206,8 @@ import io.github.plaza.core.richtext.InlineNode
 import io.github.plaza.core.richtext.RichNode
 import io.github.plaza.designsys.component.AppendSpinner
 import io.github.plaza.designsys.component.AvatarShape
+import io.github.plaza.designsys.component.BadgeChip
+import io.github.plaza.designsys.component.BadgeTone
 import io.github.plaza.designsys.component.GroupedListItem
 import io.github.plaza.designsys.component.LayerCard
 import io.github.plaza.designsys.component.LayerPageGutter
@@ -1223,6 +1226,8 @@ private fun ThreadList(
                 body = body,
                 preview = state.preview,
                 postId = state.postId,
+                authorLevel = state.authorLevel,
+                authorJoinedDays = state.authorJoinedDays,
                 showBlockedContent = state.showBlockedContent,
                 onOpenBrowser = onOpenBrowser,
                 onImageClick = onImageClick,
@@ -1541,6 +1546,8 @@ private fun ThreadOpeningPost(
     body: PostContent?,
     preview: ThreadPreview?,
     postId: Long,
+    authorLevel: Int?,
+    authorJoinedDays: Int?,
     showBlockedContent: Boolean,
     onOpenBrowser: (String) -> Unit,
     onImageClick: (String) -> Unit,
@@ -1614,6 +1621,26 @@ private fun ThreadOpeningPost(
                 badges = {
                     if (body != null) {
                         FloorBadges(body)
+                    }
+                    if (
+                        authorLevel != null &&
+                        body?.badges?.none {
+                            it.equals("Lv.$authorLevel", ignoreCase = true) ||
+                                it.equals("Lv$authorLevel", ignoreCase = true)
+                        } != false
+                    ) {
+                        BadgeChip(
+                            text = "Lv.$authorLevel",
+                            tone = if (authorLevel <= 1) BadgeTone.Caution else BadgeTone.Neutral,
+                        )
+                    }
+                    if (authorJoinedDays != null) {
+                        BadgeChip(
+                            text = stringResource(Res.string.post_author_joined_days, authorJoinedDays),
+                            tone = if (authorJoinedDays < 100) BadgeTone.Caution else BadgeTone.Neutral,
+                        )
+                    }
+                    if (body != null) {
                         UserNoteTag(body.authorUid, Modifier.weight(1f, fill = false))
                     }
                 },

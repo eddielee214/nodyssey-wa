@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.plaza.designsys.theme.LocalPlazaExtraColors
 import io.github.plaza.designsys.theme.LocalPlazaFontScale
 
 /**
@@ -115,6 +116,9 @@ enum class BadgeTone {
     /** Present but spent: outlined rather than filled. */
     Muted,
 
+    /** An amber caution — worth noticing without being an error. */
+    Caution,
+
     /** A warning about the person or the content. */
     Warning,
 
@@ -133,6 +137,7 @@ fun BadgeChip(
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val extra = LocalPlazaExtraColors.current
     val (container, content) =
         when (tone) {
             // Filled, the one badge that is: the subject of the thread is what a reader scans for.
@@ -141,6 +146,8 @@ fun BadgeChip(
             BadgeTone.Accent -> scheme.tertiaryContainer to scheme.onTertiaryContainer
 
             BadgeTone.Muted -> Color.Transparent to scheme.onSurfaceVariant
+
+            BadgeTone.Caution -> extra.warningContainer to extra.onWarningContainer
 
             BadgeTone.Warning -> scheme.errorContainer to scheme.onErrorContainer
 
