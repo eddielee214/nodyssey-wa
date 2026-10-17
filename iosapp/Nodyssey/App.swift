@@ -16,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         NodysseyApp.shared.registerBackgroundTasks()
+        DictationCrashWorkaround.install()
         return true
     }
 
@@ -57,5 +58,91 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         NodysseyApp.shared.start { controller in
             window.rootViewController = controller
         }
+    }
+}
+
+/// Keeps iOS dictation from crashing every Compose text field.
+///
+/// When dictation puts its first words in a field, UIKit calls `setMarkedText:selectedRange:` with
+/// `selectedRange.location == NSNotFound` (Int.max). Compose Multiplatform 1.13's text input views
+/// (`ComposeTextInputView` / `NativeTextInputView`) convert that with `location.toInt()`, which
+/// truncates to -1, and then build `TextRange(-1, -1)` — whose constructor rejects negatives and
+/// throws, taking the app down. The pinyin keyboard always passes a real range, which is why typing
+/// was fine and only dictation crashed.
+///
+/// Compose does nothing with that range beyond building it, so clamping it into the marked text
+/// before Compose sees it changes no editing behaviour; it only removes the illegal value. The views
+/// are Kotlin classes, so they are found by name in the Objective-C runtime and patched in place.
+/// Kotlin/Native may register them only once first used, so the scan runs again whenever a
+/// keyboard is about to appear until the default view has been patched.
+///
+/// Remove this once Compose Multiplatform handles `NSNotFound` itself.
+enum DictationCrashWorkaround {
+    private static let selector = NSSelectorFromString("setMarkedText:selectedRange:")
+    private static var patched = Set<String>()
+    private static var observer: NSObjectProtocol?
+
+    static func install() {
+        patchLoadedClasses()
+        guard !isDone else { return }
+        observer = NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillShowNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            patchLoadedClasses()
+            if isDone, let token = observer {
+                NotificationCenter.default.removeObserver(token)
+                observer = nil
+            }
+        }
+    }
+
+    private static var isDone: Bool {
+        patched.contains { $0.hasSuffix("ComposeTextInputView") }
+    }
+
+    private static func patchLoadedClasses() {
+        var count: UInt32 = 0
+        guard let classes = objc_copyClassList(&count) else { return }
+        defer { free(UnsafeMutableRawPointer(classes)) }
+        for index in 0..<Int(count) {
+            let cls: AnyClass = classes[index]
+            let name = String(cString: class_getName(cls))
+            guard name.hasSuffix("ComposeTextInputView") || name.hasSuffix("NativeTextInputView"),
+                  !patched.contains(name),
+                  let method = ownMethod(of: cls)
+            else { continue }
+            patch(method)
+            patched.insert(name)
+        }
+    }
+
+    /// The class's own implementation, so a subclass is never patched through its superclass twice.
+    private static func ownMethod(of cls: AnyClass) -> Method? {
+        var count: UInt32 = 0
+        guard let methods = class_copyMethodList(cls, &count) else { return nil }
+        defer { free(methods) }
+        for index in 0..<Int(count) where method_getName(methods[index]) == selector {
+            return methods[index]
+        }
+        return nil
+    }
+
+    private static func patch(_ method: Method) {
+        typealias SetMarkedText = @convention(c) (AnyObject, Selector, NSString?, NSRange) -> Void
+        let original = unsafeBitCast(method_getImplementation(method), to: SetMarkedText.self)
+        let sel = selector
+        let replacement: @convention(block) (AnyObject, NSString?, NSRange) -> Void = { view, text, range in
+            let length = text?.length ?? 0
+            var safe = range
+            if safe.location == NSNotFound || safe.location > length {
+                safe = NSRange(location: length, length: 0)
+            } else if safe.length > length - safe.location {
+                safe.length = length - safe.location
+            }
+            original(view, sel, text, safe)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(replacement))
     }
 }
