@@ -4,6 +4,8 @@
 
 [NodeSeek](https://www.nodeseek.com/) 的非官方开源 Android 客户端，Kotlin + Jetpack Compose，帖子渲染为原生 Compose 内容。
 
+> 因个人原因项目整体暂停维护一段时间。预计12月底回归。期间无暇估计issue和pr。
+
 [![Release](https://img.shields.io/github/v/release/5151561/nodyssey?include_prereleases&sort=semver&label=Release&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
 [![Downloads](https://img.shields.io/github/downloads/5151561/nodyssey/total?label=Downloads&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
 [![Stars](https://img.shields.io/github/stars/5151561/nodyssey?style=flat&logo=github&label=Stars)](https://github.com/5151561/nodyssey/stargazers)
@@ -29,7 +31,7 @@
 
 到 [Releases](https://github.com/5151561/nodyssey/releases) 下载最新 APK，应用内也可以检查更新。各版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
-> **关于 iOS**：项目只维护 Android。iOS 版本已停止维护，不再加功能、不再修 iOS 专属的问题，也不接受 iOS 方向的 PR。
+> **关于 iOS**：项目只维护 Android。。
 
 ## 功能
 
