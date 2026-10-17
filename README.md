@@ -4,7 +4,7 @@
 
 [NodeSeek](https://www.nodeseek.com/) 的非官方开源 Android 客户端，Kotlin + Jetpack Compose，帖子渲染为原生 Compose 内容。
 
-> 因个人原因项目整体暂停维护一段时间。预计12月底回归。期间无暇估计issue和pr。
+> 因个人原因项目整体暂停维护一段时间。预计12月底回归。期间无暇顾及issue和pr。
 
 [![Release](https://img.shields.io/github/v/release/5151561/nodyssey?include_prereleases&sort=semver&label=Release&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
 [![Downloads](https://img.shields.io/github/downloads/5151561/nodyssey/total?label=Downloads&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
