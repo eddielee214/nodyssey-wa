@@ -66,6 +66,7 @@ import io.github.nodyssey.data.dns.DohCapabilities
 import io.github.nodyssey.data.dns.DohSettings
 import io.github.nodyssey.data.dns.DohSupport
 import io.github.nodyssey.data.dns.resolvesOverHttps
+import io.github.nodyssey.data.hot.HotListSource
 import io.github.nodyssey.data.imagehost.DataStoreImageHostSettings
 import io.github.nodyssey.data.imagehost.DefaultImageHostRepository
 import io.github.nodyssey.data.imagehost.ImageHostRepository
@@ -524,6 +525,10 @@ class IosAppContainer(
             clock = clock,
             scope = appScope,
         )
+    }
+
+    override val hotListSource: HotListSource by lazy {
+        HotListSource(NSUrlSessionTransport { imageHostSession.current }, dispatchers)
     }
 
     override val sessionRepository: SessionRepository by lazy { SessionRepository(sessionCookies) }

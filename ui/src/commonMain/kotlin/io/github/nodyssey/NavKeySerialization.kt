@@ -30,6 +30,7 @@ internal val NavKeySavedStateConfiguration =
                 polymorphic(NavKey::class) {
                     subclass(PostListKey::class)
                     subclass(SearchKey::class)
+                    subclass(HotListKey::class)
                     subclass(NotificationsKey::class)
                     subclass(ProfileKey::class)
                     subclass(SettingsKey::class)

@@ -125,6 +125,7 @@ import io.github.nodyssey.ui.resources.action_sort
 import io.github.nodyssey.ui.resources.action_switch_site
 import io.github.nodyssey.ui.resources.feed_page_size_note
 import io.github.nodyssey.ui.resources.home_search_hint
+import io.github.nodyssey.ui.resources.hot_title
 import io.github.nodyssey.ui.resources.page_jump_newest
 import io.github.nodyssey.ui.resources.post_badge_pinned
 import io.github.nodyssey.ui.resources.post_last_reply_by
@@ -178,6 +179,7 @@ fun PostListRoute(
     onSignIn: () -> Unit,
     onVerify: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onHotList: () -> Unit = {},
     onAccountClick: () -> Unit = {},
     onNavigationBarHiddenChanged: (Boolean) -> Unit = {},
     reselectRequests: Int = 0,
@@ -191,6 +193,7 @@ fun PostListRoute(
         onPostClick = onPostClick,
         onCreatePost = onCreatePost,
         onSearch = onSearch,
+        onHotList = onHotList,
         onAccountClick = onAccountClick,
         onBoardClick = viewModel::selectCategory,
         onArrangementChange = viewModel::saveBoardArrangement,
@@ -251,6 +254,7 @@ fun PostListScreen(
     onCreatePost: () -> Unit = {},
     /** Opens 搜索 on top of this list, from the app bar's own action. */
     onSearch: () -> Unit = {},
+    onHotList: () -> Unit = {},
     /** The account avatar at the end of the bar: 我的. */
     onAccountClick: () -> Unit = {},
     /** Keeps the host navigation bar hidden until the user deliberately scrolls toward the list start. */
@@ -565,6 +569,7 @@ fun PostListScreen(
                     sort = state.sort,
                     onSortChange = onSortChange,
                     onSearch = onSearch,
+                    onHotList = onHotList,
                     account = state.account,
                     onAccountClick = onAccountClick,
                     scrollBehavior = topBarScrollBehavior,
@@ -899,6 +904,7 @@ private fun HomeHeader(
     sort: FeedSort,
     onSortChange: (FeedSort) -> Unit,
     onSearch: () -> Unit,
+    onHotList: () -> Unit,
     account: HomeAccount?,
     onAccountClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
@@ -916,6 +922,7 @@ private fun HomeHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SiteSwitcher(account = account, modifier = Modifier.weight(1f))
+            HotListButton(onClick = onHotList)
             AccountButton(account = account, onClick = onAccountClick)
         }
         Row(
@@ -927,6 +934,36 @@ private fun HomeHeader(
         ) {
             SearchPill(onClick = onSearch, modifier = Modifier.weight(1f))
             SortButton(sort = sort, onSortChange = onSortChange)
+        }
+    }
+}
+
+/**
+ * 热榜: an outlined flame on the same raised tile the signed-out account face is drawn on, so the two
+ * read as a pair at the end of the bar rather than as an icon and a picture that happen to be near.
+ */
+@Composable
+private fun HotListButton(onClick: () -> Unit) {
+    val label = stringResource(Res.string.hot_title)
+    val layers = LocalPlazaLayers.current
+    Box(
+        modifier = Modifier
+            .size(Sizes.minTouchTarget)
+            .clip(AccountAvatarShape)
+            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(AccountAvatarSize)
+                .cardShadow(AccountAvatarShape, layers.shadows)
+                .clip(AccountAvatarShape)
+                .background(layers.raised)
+                .cardBorder(layers, AccountAvatarShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(PlazaIcons.LocalFireDepartment, contentDescription = null, modifier = Modifier.size(HeaderIconSize))
         }
     }
 }

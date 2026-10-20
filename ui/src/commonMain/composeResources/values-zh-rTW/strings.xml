@@ -1610,4 +1610,19 @@
     <string name="messages_scam_warning_low_level">對方等級較低（Lv.%1$d）。近期私訊詐騙頻發，請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
     <string name="messages_scam_warning_new_account">對方註冊時間不足 100 天（%1$d 天）。近期私訊詐騙頻發，請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
     <string name="messages_scam_caution_general">近期私訊詐騙頻發，高等級或老帳號亦可能存在被盜風險。請勿輕信先款、口令紅包或站外私聊交易，大額交易請務必使用論壇中介。</string>
+    <!-- hot:start -->
+    <string name="hot_title">熱榜</string>
+    <string name="hot_period_realtime">即時</string>
+    <string name="hot_period_daily">日榜</string>
+    <string name="hot_period_weekly">週榜</string>
+    <string name="hot_updated_just_now">剛剛更新</string>
+    <string name="hot_updated_minutes">%1$d 分鐘前更新</string>
+    <string name="hot_updated_hours">%1$d 小時前更新</string>
+    <string name="hot_row_meta">%1$s · 瀏覽 %2$d · 回覆 %3$d</string>
+    <string name="hot_source">榜單由第三方 bimg.eu.org 計算，非 NodeSeek 官方</string>
+    <string name="hot_empty_title">榜單暫時是空的</string>
+    <string name="hot_error_title">熱榜載入失敗</string>
+    <string name="hot_error_network">連不上 bimg.eu.org，檢查網路或代理後重試。</string>
+    <string name="hot_error_unavailable">熱榜服務暫時無法使用，稍後再試。</string>
+    <!-- hot:end -->
 </resources>

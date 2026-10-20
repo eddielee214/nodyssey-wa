@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import io.github.nodyssey.core.NodeSeekSite
+import io.github.nodyssey.ui.hot.HotListRoute
+import io.github.nodyssey.ui.hot.HotListViewModel
 import io.github.nodyssey.ui.login.WebViewGoal
 import io.github.nodyssey.ui.messages.MessageThreadRoute
 import io.github.nodyssey.ui.messages.MessageThreadViewModel
@@ -58,6 +60,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
             },
             onCreatePost = { backStack.add(PostComposerKey()) },
             onSearch = { backStack.add(SearchKey()) },
+            onHotList = { backStack.add(HotListKey) },
             onAccountClick = openProfileTab,
             onSignIn = {
                 backStack.add(SignInKey)
@@ -69,6 +72,23 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
                 if (!isListDetailExpanded()) onTabBarHiddenByScroll(hidden)
             },
             reselectRequests = homeReselectRequests(),
+        )
+    }
+
+    entry<HotListKey> {
+        val viewModel: HotListViewModel = viewModel(factory = HotListViewModel.factory(container))
+        HotListRoute(
+            viewModel = viewModel,
+            onBack = { backStack.removeLastOrNull() },
+            // What the row shows is what the thread can draw before its own fetch answers.
+            onPostClick = { entry ->
+                backStack.add(
+                    PostDetailKey(
+                        entry.postId,
+                        preview = ThreadPreview(title = entry.title, authorName = entry.authorName),
+                    ),
+                )
+            },
         )
     }
 

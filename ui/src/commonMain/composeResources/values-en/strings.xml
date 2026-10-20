@@ -1618,4 +1618,19 @@
     <string name="messages_scam_warning_low_level">This account has a low level (Lv.%1$d). Private message scams are common — avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
     <string name="messages_scam_warning_new_account">This account registered less than 100 days ago (%1$d d). Private message scams are common — avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
     <string name="messages_scam_caution_general">Private message scams are common, and even high-level or older accounts may be compromised. Avoid advance payments, off-site chats, or unverified transfers, and use an official forum escrow for large trades.</string>
+    <!-- hot:start -->
+    <string name="hot_title">Hot</string>
+    <string name="hot_period_realtime">Now</string>
+    <string name="hot_period_daily">Today</string>
+    <string name="hot_period_weekly">This week</string>
+    <string name="hot_updated_just_now">Updated just now</string>
+    <string name="hot_updated_minutes">Updated %1$d min ago</string>
+    <string name="hot_updated_hours">Updated %1$d h ago</string>
+    <string name="hot_row_meta">%1$s · %2$d views · %3$d replies</string>
+    <string name="hot_source">Ranked by bimg.eu.org, a third party, not NodeSeek</string>
+    <string name="hot_empty_title">Nothing ranked yet</string>
+    <string name="hot_error_title">Couldn't load the hot list</string>
+    <string name="hot_error_network">Couldn't reach bimg.eu.org. Check your connection or proxy and try again.</string>
+    <string name="hot_error_unavailable">The hot list service is unavailable. Try again later.</string>
+    <!-- hot:end -->
 </resources>

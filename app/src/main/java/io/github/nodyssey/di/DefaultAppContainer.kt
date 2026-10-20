@@ -78,6 +78,7 @@ import io.github.nodyssey.data.dns.DohCapabilities
 import io.github.nodyssey.data.dns.DohSettings
 import io.github.nodyssey.data.dns.DohSupport
 import io.github.nodyssey.data.dns.OkHttpDnsResolutionTester
+import io.github.nodyssey.data.hot.HotListSource
 import io.github.nodyssey.data.imagehost.DataStoreImageHostSettings
 import io.github.nodyssey.data.imagehost.DefaultImageHostRepository
 import io.github.nodyssey.data.imagehost.ImageHostRepository
@@ -701,6 +702,10 @@ class DefaultAppContainer(
             clock = clock,
             scope = appScope,
         )
+    }
+
+    override val hotListSource: HotListSource by lazy {
+        HotListSource(OkHttpTransport(imageHostClient), dispatchers)
     }
 
     /**

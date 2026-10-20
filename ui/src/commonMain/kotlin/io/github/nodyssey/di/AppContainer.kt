@@ -30,6 +30,7 @@ import io.github.nodyssey.data.composer.PostComposerRepository
 import io.github.nodyssey.data.composer.PostEditor
 import io.github.nodyssey.data.diagnostics.NetworkDiagnostics
 import io.github.nodyssey.data.dns.DohSupport
+import io.github.nodyssey.data.hot.HotListSource
 import io.github.nodyssey.data.imagehost.ImageHostRepository
 import io.github.nodyssey.data.proxy.ProxyConnectionTester
 import io.github.nodyssey.data.proxy.ProxySettings
@@ -98,6 +99,9 @@ interface AppContainer {
 
     /** 我的表情 and the GitHub sticker packs — see [StickerLibrary]. The device owner's; kept on sign-out. */
     val stickerLibrary: StickerLibrary
+
+    /** 热榜 — a third party's ranking of NodeSeek threads; see [HotListSource] for why it is cookie-less. */
+    val hotListSource: HotListSource
     val sessionRepository: SessionRepository
 
     /**

@@ -17,6 +17,10 @@ data object PostListKey : NavKey
 @Serializable
 data class SearchKey(val query: String? = null) : NavKey
 
+/** 热榜, opened from the flame beside the account face in 首页's app bar. */
+@Serializable
+data object HotListKey : NavKey
+
 @Serializable
 data object NotificationsKey : NavKey
 
