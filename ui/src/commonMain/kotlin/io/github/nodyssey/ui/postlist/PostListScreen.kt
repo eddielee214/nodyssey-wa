@@ -941,6 +941,10 @@ private fun HomeHeader(
 /**
  * 热榜: an outlined flame on the same raised tile the signed-out account face is drawn on, so the two
  * read as a pair at the end of the bar rather than as an icon and a picture that happen to be near.
+ *
+ * Its target stops at the tile's right edge instead of centring the tile in a full square. Centred,
+ * each tile sat in the middle of its own 48dp and the two were 20dp apart — far enough to read as
+ * unrelated. Now the only space between them is the account target's own inset.
  */
 @Composable
 private fun HotListButton(onClick: () -> Unit) {
@@ -948,11 +952,11 @@ private fun HotListButton(onClick: () -> Unit) {
     val layers = LocalPlazaLayers.current
     Box(
         modifier = Modifier
-            .size(Sizes.minTouchTarget)
+            .size(width = AccountAvatarSize + HotListLeadingInset, height = Sizes.minTouchTarget)
             .clip(AccountAvatarShape)
             .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.CenterEnd,
     ) {
         Box(
             modifier = Modifier
@@ -1001,6 +1005,9 @@ private fun AccountButton(
         }
     }
 }
+
+/** The flame target's reach to the left of its tile: what centring it in 48dp would have given it. */
+private val HotListLeadingInset = 10.dp
 
 /** 28dp: the account's face at the end of the bar, drawn inside its 48dp target. */
 private val AccountAvatarSize = 28.dp
