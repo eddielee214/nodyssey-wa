@@ -1608,6 +1608,9 @@
     <string name="sticker_image_link_copied">Image link copied</string>
     <!-- sticker:end -->
     <string name="post_author_joined_days">Joined %1$d d</string>
+    <string name="author_joined_days_short">%1$dd</string>
+    <string name="author_risk">Risk</string>
+    <string name="author_risk_description">New or low-level account; be careful trading</string>
     <string name="messages_thread_joined_days">Joined %1$d d</string>
     <string name="messages_scam_warning_title">Trading risk warning</string>
     <string name="messages_scam_caution_title">Anti-scam reminder</string>

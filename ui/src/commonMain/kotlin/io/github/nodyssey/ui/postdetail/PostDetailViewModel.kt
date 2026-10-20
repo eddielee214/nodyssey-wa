@@ -26,6 +26,7 @@ import io.github.plaza.core.net.SiteError
 import io.github.plaza.core.net.SiteException
 import io.github.plaza.core.runCatchingExceptCancellation
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 /**
  * State holder for one thread, reading from the database and writing through it.
@@ -79,8 +82,8 @@ class PostDetailViewModel(
     /** 追踪新回复; absent in a test that does not care, which also hides the menu item. */
     private val trackedThreads: TrackedThreadStore? = null,
     /**
-     * Reads `/api/account/getInfo/{uid}` for the opening post's author so the header can show
-     * `Lv.X` and `加入 X 天` alongside `楼主`.
+     * Reads `/api/account/getInfo/{uid}` for every author on the loaded pages, so each floor's header
+     * can show `Lv.X`, the days since registration and, for a low-level or new account, 风险.
      */
     private val profiles: ProfileRepository? = null,
     private val clock: AppClock = AppClock.System,
@@ -97,8 +100,16 @@ class PostDetailViewModel(
     val uiState: StateFlow<PostDetailUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
-    private var authorProfileJob: Job? = null
-    private var fetchedAuthorUid: Long? = null
+
+    /** Uids asked for or answered this visit, so each author costs one request however many floors. */
+    private val requestedAuthorStats = mutableSetOf<Long>()
+    private var authorStatsJobs = SupervisorJob(viewModelScope.coroutineContext[Job])
+
+    /**
+     * A page brings in a few dozen authors at once. A handful in flight at a time keeps that from
+     * reaching the site as a burst, and the headers fill in over a second or two instead.
+     */
+    private val authorStatsPermits = Semaphore(AUTHOR_STATS_CONCURRENCY)
 
     /** Where the reader is *now*, reported by the screen as it scrolls. See [recordReadingPosition]. */
     private val readingPosition = MutableStateFlow<ReadingPosition?>(null)
@@ -127,8 +138,7 @@ class PostDetailViewModel(
                     // thread opened from a notification looks like for the length of its first fetch.
                     // Clearing the floor here threw away the one thing that read was opened for,
                     // before the floors it named could possibly have arrived.
-                    fetchedAuthorUid = null
-                    authorProfileJob?.cancel()
+                    resetAuthorStats()
                     _uiState.update {
                         it.copy(
                             title = preview?.title.orEmpty(),
@@ -144,6 +154,7 @@ class PostDetailViewModel(
                             isAwarded = preview?.isAwarded == true,
                             authorLevel = null,
                             authorJoinedDays = null,
+                            authorStats = emptyMap(),
                         )
                     }
                     return@collect
@@ -167,7 +178,7 @@ class PostDetailViewModel(
                         isAwarded = thread.isAwarded == true,
                     )
                 }
-                loadAuthorProfileIfNeeded(thread.body?.authorUid)
+                loadAuthorStats(_uiState.value)
 
                 // "Read" means content actually reached the screen — which is exactly this emission,
                 // and the only signal that covers all the ways it can happen: a fresh fetch, a cache
@@ -213,7 +224,9 @@ class PostDetailViewModel(
                     )
                 if (sessionState.isSignedIn && !cleared) repository.invalidateCaches()
                 refresh()
-                loadAuthorProfileIfNeeded(_uiState.value.body?.authorUid)
+                // Signing in can change what the site will say about an account; ask again.
+                resetAuthorStats()
+                loadAuthorStats(_uiState.value)
             }.launchIn(viewModelScope)
 
         // The stored place is read *before* this read starts writing over it, and then held for the
@@ -233,25 +246,45 @@ class PostDetailViewModel(
         }
     }
 
-    private fun loadAuthorProfileIfNeeded(uid: Long?) {
+    private fun resetAuthorStats() {
+        authorStatsJobs.cancel()
+        authorStatsJobs = SupervisorJob(viewModelScope.coroutineContext[Job])
+        requestedAuthorStats.clear()
+    }
+
+    /**
+     * Asks for the level and registration date of every author on screen not asked about yet. A
+     * failure forgets the uid, so the next page that arrives tries that author again.
+     */
+    private fun loadAuthorStats(state: PostDetailUiState) {
         val repo = profiles ?: return
-        if (uid == null || uid <= 0 || uid == fetchedAuthorUid) return
-        fetchedAuthorUid = uid
-        authorProfileJob?.cancel()
-        authorProfileJob =
-            viewModelScope.launch {
-                runCatchingExceptCancellation { repo.profile(uid) }
+        val uids =
+            (listOfNotNull(state.body) + state.comments)
+                .mapNotNull { it.authorUid }
+                .filter { it > 0 && requestedAuthorStats.add(it) }
+        for (uid in uids) {
+            viewModelScope.launch(authorStatsJobs) {
+                authorStatsPermits
+                    .withPermit { runCatchingExceptCancellation { repo.profile(uid) } }
                     .onSuccess { profile ->
+                        val stats =
+                            AuthorStats(
+                                level = profile.rank,
+                                joinedDays = joinedDays(profile.createdAt, clock.nowMillis()),
+                            )
                         _uiState.update {
+                            val isOpeningAuthor = it.body?.authorUid == uid
                             it.copy(
-                                authorLevel = profile.rank,
-                                authorJoinedDays = joinedDays(profile.createdAt, clock.nowMillis()),
+                                authorStats = it.authorStats + (uid to stats),
+                                authorLevel = if (isOpeningAuthor) stats.level else it.authorLevel,
+                                authorJoinedDays = if (isOpeningAuthor) stats.joinedDays else it.authorJoinedDays,
                             )
                         }
                     }.onFailure {
-                        fetchedAuthorUid = null
+                        requestedAuthorStats.remove(uid)
                     }
             }
+        }
     }
 
     /**
@@ -704,6 +737,9 @@ class PostDetailViewModel(
          * enough that leaving the thread the moment you stop still records where you stopped.
          */
         private const val POSITION_WRITE_DELAY_MILLIS = 500L
+
+        /** How many `/api/account/getInfo` requests a thread keeps in flight; see [authorStatsPermits]. */
+        private const val AUTHOR_STATS_CONCURRENCY = 3
     }
 }
 
@@ -778,6 +814,8 @@ data class PostDetailUiState(
     val authorLevel: Int? = null,
     /** Whole days since the original poster registered, when known. */
     val authorJoinedDays: Int? = null,
+    /** Level and registration age by uid, for every author whose `/api/account/getInfo` has answered. */
+    val authorStats: Map<Long, AuthorStats> = emptyMap(),
 ) {
     /**
      * Whether there is a thread on screen to read and act on.
@@ -791,6 +829,20 @@ data class PostDetailUiState(
 }
 
 enum class TrackMessage { TRACKED, FULL }
+
+/** What `/api/account/getInfo/{uid}` says about a floor's author that the page itself does not. */
+data class AuthorStats(
+    /** Null when the site's answer had no rank in it. */
+    val level: Int?,
+    /** Null when the site's `created_at` could not be read; see [joinedDays]. */
+    val joinedDays: Int?,
+) {
+    /**
+     * The same line the 私信 scam warning draws: a level-1 account, or one under a hundred days old,
+     * is where most of the trouble on this forum has come from.
+     */
+    val isRisky: Boolean get() = (level != null && level <= 1) || (joinedDays != null && joinedDays < 100)
+}
 
 /**
  * The highest floor number on the thread's last page, when that page is loaded — the one moment the

@@ -1876,6 +1876,9 @@
     <string name="sticker_image_link_copied">已复制图片链接</string>
     <!-- sticker:end -->
     <string name="post_author_joined_days">加入 %1$d 天</string>
+    <string name="author_joined_days_short">%1$d天</string>
+    <string name="author_risk">风险</string>
+    <string name="author_risk_description">注册时间短或等级低的账号，交易请谨慎</string>
     <string name="messages_thread_joined_days">加入 %1$d 天</string>
     <string name="messages_scam_warning_title">交易风险提示</string>
     <string name="messages_scam_caution_title">防诈安全提醒</string>

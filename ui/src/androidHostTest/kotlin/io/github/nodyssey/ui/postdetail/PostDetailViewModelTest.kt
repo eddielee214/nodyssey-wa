@@ -1111,6 +1111,44 @@ class PostDetailViewModelTest {
             assertEquals(1, vm.uiState.value.authorLevel)
             assertEquals(24, vm.uiState.value.authorJoinedDays)
         }
+
+    @Test
+    fun `asks for each floor author's stats once, however many floors they wrote`() =
+        runTest(dispatcher) {
+            var requests = 0
+            val profiles =
+                object : ProfileRepository {
+                    override suspend fun profile(refresh: Boolean): UserProfile = error("unused")
+
+                    override suspend fun profile(uid: Long): UserProfile {
+                        requests++
+                        return UserProfile(
+                            uid = uid,
+                            name = "author",
+                            avatarUrl = "",
+                            rank = 5,
+                            createdAt = "2025-10-08T00:00:00.000Z",
+                        )
+                    }
+                }
+            val vm = viewModel(profiles = profiles, clock = AppClock { 1_784_980_800_000L })
+            advanceUntilIdle()
+
+            // The fake thread's opening post and every reply share uid 1.
+            assertTrue(vm.uiState.value.comments.isNotEmpty())
+            assertEquals(1, requests)
+            val stats = vm.uiState.value.authorStats.getValue(1)
+            assertEquals(5, stats.level)
+            assertFalse(stats.isRisky)
+        }
+
+    @Test
+    fun `a level-1 or under-100-day account is risky`() {
+        assertTrue(AuthorStats(level = 1, joinedDays = 400).isRisky)
+        assertTrue(AuthorStats(level = 5, joinedDays = 99).isRisky)
+        assertFalse(AuthorStats(level = 2, joinedDays = 100).isRisky)
+        assertFalse(AuthorStats(level = 3, joinedDays = null).isRisky)
+    }
 }
 
 /** The same trick as [GatedReactionRepository] for the star: a real thread, a recorded toggle. */

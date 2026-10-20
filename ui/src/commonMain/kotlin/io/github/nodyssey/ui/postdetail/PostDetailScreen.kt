@@ -110,6 +110,7 @@ import io.github.nodyssey.model.PostReactions
 import io.github.nodyssey.model.ReactionAction
 import io.github.nodyssey.model.countOf
 import io.github.nodyssey.model.hasSpent
+import io.github.nodyssey.ui.common.AuthorStatBadges
 import io.github.nodyssey.ui.common.BoardTag
 import io.github.nodyssey.ui.common.BottomPullToRefreshBox
 import io.github.nodyssey.ui.common.JumpDestination
@@ -154,7 +155,6 @@ import io.github.nodyssey.ui.resources.page_jump_at_page
 import io.github.nodyssey.ui.resources.page_jump_at_page_floor
 import io.github.nodyssey.ui.resources.page_jump_latest
 import io.github.nodyssey.ui.resources.page_jump_resume_title
-import io.github.nodyssey.ui.resources.post_author_joined_days
 import io.github.nodyssey.ui.resources.post_auto_paging
 import io.github.nodyssey.ui.resources.post_badge_awarded
 import io.github.nodyssey.ui.resources.post_badge_original_poster
@@ -206,8 +206,6 @@ import io.github.plaza.core.richtext.InlineNode
 import io.github.plaza.core.richtext.RichNode
 import io.github.plaza.designsys.component.AppendSpinner
 import io.github.plaza.designsys.component.AvatarShape
-import io.github.plaza.designsys.component.BadgeChip
-import io.github.plaza.designsys.component.BadgeTone
 import io.github.plaza.designsys.component.GroupedListItem
 import io.github.plaza.designsys.component.LayerCard
 import io.github.plaza.designsys.component.LayerPageGutter
@@ -1287,6 +1285,7 @@ private fun ThreadList(
             BlockAware(content = comment, revealed = state.showBlockedContent) {
                 CommentRow(
                     comment = comment,
+                    authorStats = comment.authorUid?.let { state.authorStats[it] },
                     onOpenBrowser = onOpenBrowser,
                     onImageClick = onImageClick,
                     onJumpToFloor = onJumpToFloor,
@@ -1619,28 +1618,16 @@ private fun ThreadOpeningPost(
                 modifier = Modifier.weight(1f),
                 identity = Modifier.authorClickable(body?.authorUid, onAuthorClick),
                 badges = {
+                    if (authorLevel != null || authorJoinedDays != null) {
+                        AuthorStatBadges(
+                            level = authorLevel,
+                            joinedDays = authorJoinedDays,
+                            isRisky = AuthorStats(authorLevel, authorJoinedDays).isRisky,
+                            siteBadges = body?.badges.orEmpty(),
+                        )
+                    }
                     if (body != null) {
                         FloorBadges(body)
-                    }
-                    if (
-                        authorLevel != null &&
-                        body?.badges?.none {
-                            it.equals("Lv.$authorLevel", ignoreCase = true) ||
-                                it.equals("Lv$authorLevel", ignoreCase = true)
-                        } != false
-                    ) {
-                        BadgeChip(
-                            text = "Lv.$authorLevel",
-                            tone = if (authorLevel <= 1) BadgeTone.Caution else BadgeTone.Neutral,
-                        )
-                    }
-                    if (authorJoinedDays != null) {
-                        BadgeChip(
-                            text = stringResource(Res.string.post_author_joined_days, authorJoinedDays),
-                            tone = if (authorJoinedDays < 100) BadgeTone.Caution else BadgeTone.Neutral,
-                        )
-                    }
-                    if (body != null) {
                         UserNoteTag(body.authorUid, Modifier.weight(1f, fill = false))
                     }
                 },
@@ -1791,6 +1778,8 @@ private fun CommentsHeader(count: Int) {
 @Composable
 private fun CommentRow(
     comment: PostContent,
+    /** Null until the author's `/api/account/getInfo` has answered, or when it never does. */
+    authorStats: AuthorStats?,
     onOpenBrowser: (String) -> Unit,
     onImageClick: (String) -> Unit,
     onJumpToFloor: (String) -> Unit,
@@ -1839,6 +1828,14 @@ private fun CommentRow(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.authorClickable(comment.authorUid, onAuthorClick),
                         )
+                        if (authorStats != null) {
+                            AuthorStatBadges(
+                                level = authorStats.level,
+                                joinedDays = authorStats.joinedDays,
+                                isRisky = authorStats.isRisky,
+                                siteBadges = comment.badges,
+                            )
+                        }
                         FloorBadges(comment)
                         UserNoteTag(comment.authorUid)
                     }

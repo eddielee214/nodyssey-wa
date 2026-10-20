@@ -1600,6 +1600,9 @@
     <string name="sticker_image_link_copied">已複製圖片連結</string>
     <!-- sticker:end -->
     <string name="post_author_joined_days">加入 %1$d 天</string>
+    <string name="author_joined_days_short">%1$d天</string>
+    <string name="author_risk">風險</string>
+    <string name="author_risk_description">註冊時間短或等級低的帳號，交易請謹慎</string>
     <string name="messages_thread_joined_days">加入 %1$d 天</string>
     <string name="messages_scam_warning_title">交易風險提示</string>
     <string name="messages_scam_caution_title">防詐安全提醒</string>
