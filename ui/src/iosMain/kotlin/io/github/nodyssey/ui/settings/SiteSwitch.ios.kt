@@ -9,23 +9,25 @@ import platform.Foundation.NSUserDefaults
 @Composable
 actual fun rememberSiteSwitch(): (Site) -> Unit =
     remember {
-        { site -> if (site != ActiveSite.current) IosActiveSite.store(site) }
+        { site ->
+            if (site != ActiveSite.current) {
+                IosActiveSite.store(site)
+                IosActiveSite.switcher?.invoke(site)
+            }
+        }
     }
 
 /**
- * iOS stores the choice and applies it at the next launch. It does not restart itself.
+ * iOS switches in place: the choice is stored, and the shell tears down its screens and its graph and
+ * builds both again over the other site — see `NodysseyApp.switchSite` in `:iosapp`.
  *
- * Not a shortcut — there is no supported way to do it. Terminating an app from inside it is grounds
- * for App Store rejection and reads to the user as a crash, and the alternative of rebuilding the
- * graph in place is ruled out by the shell itself: `IosNodysseyApp.ensureContainer` builds exactly
- * one container per process *because* two of them over the same DataStore files raise
- * `IllegalStateException` the moment both are serving one file. Per-site file names widen that only
- * as far as the two containers not sharing files; the old one's UI, its coroutines and its Room
- * handle would still be live behind the new one.
- *
- * So the switcher says so on this platform instead of pretending — see [siteSwitchRestartsApp].
+ * It cannot restart the process the way Android does — terminating an app from inside it reads to
+ * the user as a crash — so the rebuild is what makes a switch one tap. What used to rule that out,
+ * two graphs over the same DataStore files, is answered by the files being opened once per process
+ * and handed to each graph in turn (`ProcessWideInstances`), and by the old graph being stopped
+ * before the site changes under it.
  */
-actual val siteSwitchRestartsApp: Boolean = false
+actual val siteSwitchRestartsApp: Boolean = true
 
 /** 站点, as an Apple platform stores it. The Android note on [AndroidActiveSite] applies here too. */
 object IosActiveSite {
@@ -39,4 +41,10 @@ object IosActiveSite {
     internal fun store(site: Site) {
         NSUserDefaults.standardUserDefaults.setObject(site.storedValue, KEY_SITE)
     }
+
+    /**
+     * What rebuilds the app on [site]; set by the shell once it is up. Null before that, in which case
+     * the stored choice simply applies at the next launch.
+     */
+    var switcher: ((Site) -> Unit)? = null
 }

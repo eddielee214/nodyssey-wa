@@ -36,6 +36,7 @@ import io.github.nodyssey.ui.settings.rememberAppLinkHandlingEnabled
 import io.github.nodyssey.ui.settings.rememberAppLinkSettingsLauncher
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -90,7 +91,26 @@ import platform.darwin.NSObject
  * - **Hide-on-scroll for the tab bar.** The bar is glass over the content rather than a slab under
  *   it, which is the reason to hide one.
  */
-suspend fun nativeShellViewController(container: AppContainer): UIViewController {
+suspend fun nativeShellViewController(container: AppContainer): UIViewController = nativeShell(container).root
+
+/**
+ * The shell's root, and the way to take the shell down — what a 站点 switch needs before it can
+ * build the next one over another site's graph. See [NativeShellHandle.dispose].
+ */
+class NativeShellHandle internal constructor(
+    val root: UIViewController,
+    private val release: () -> Unit,
+) {
+    /**
+     * Clears every view model the shell made and stops its own coroutines, so nothing built against
+     * this graph is still fetching or writing once the next graph takes over. The controllers go with
+     * the window's next root; this is everything they would otherwise leave running.
+     */
+    fun dispose() = release()
+}
+
+/** [nativeShellViewController], with the handle a 站点 switch tears the shell down by. */
+suspend fun nativeShell(container: AppContainer): NativeShellHandle {
     // Read before anything is drawn, for the reason `NodysseyRoot` takes `initialSettings`: the first
     // frame of every screen would otherwise go out in the factory colours.
     val settings = container.settingsRepository.settings.first()
@@ -104,7 +124,8 @@ suspend fun nativeShellViewController(container: AppContainer): UIViewController
             rssLabel = getString(Res.string.about_rss),
             tabTitles = TopLevelDestination.entries.associateWith { getString(it.label) },
         )
-    return NativeShell(container, settings, strings).root
+    val shell = NativeShell(container, settings, strings)
+    return NativeShellHandle(shell.root, shell::dispose)
 }
 
 private class ShellStrings(
@@ -192,6 +213,9 @@ private class NativeShell(
     /** Controllers popped but possibly still animating out; see [flushReleases]. */
     private val pendingRelease = mutableListOf<Page>()
 
+    /** Every page whose view models have not been cleared yet; what [dispose] clears. */
+    private val liveOwners = mutableSetOf<PageOwner>()
+
     private val mirrors: Map<TopLevelDestination, StackMirror<NavKey, Page>> =
         TopLevelDestination.entries.associateWith { destination ->
             StackMirror(
@@ -249,7 +273,7 @@ private class NativeShell(
     private fun page(destination: TopLevelDestination, index: Int, key: NavKey): Page {
         val stack = stacks.getValue(destination)
         val entry = providers.getValue(destination)(key)
-        val owner = PageOwner()
+        val owner = PageOwner().also { liveOwners += it }
         val controller =
             ComposeUIViewController {
                 NodysseyChrome(container, settings) {
@@ -296,8 +320,20 @@ private class NativeShell(
      * when the transition is over, and [sync] calls it at once for a tab that is not on screen.
      */
     private fun flushReleases() {
-        pendingRelease.forEach { it.owner.viewModelStore.clear() }
+        pendingRelease.forEach {
+            it.owner.viewModelStore.clear()
+            liveOwners -= it.owner
+        }
         pendingRelease.clear()
+    }
+
+    /** See [NativeShellHandle.dispose]. */
+    fun dispose() {
+        scope.cancel()
+        liveOwners.forEach { it.viewModelStore.clear() }
+        liveOwners.clear()
+        pendingRelease.clear()
+        shellStore.clear()
     }
 
     private fun observeSettings() {

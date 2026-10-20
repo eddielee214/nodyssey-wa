@@ -1,10 +1,11 @@
 package io.github.nodyssey.ios
 
-import coil3.ImageLoader
-import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import io.github.nodyssey.NativeShellHandle
+import io.github.nodyssey.core.ActiveSite
 import io.github.nodyssey.core.NodeSeekSite
-import io.github.nodyssey.nativeShellViewController
+import io.github.nodyssey.core.Site
+import io.github.nodyssey.nativeShell
 import io.github.nodyssey.ui.settings.IosActiveSite
 import io.github.plaza.core.net.resolveWebKitUserAgent
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import platform.UIKit.UIView
+import platform.UIKit.UIViewAnimationOptionTransitionCrossDissolve
 import platform.UIKit.UIViewController
 
 /**
@@ -66,6 +69,13 @@ object NodysseyApp {
     private var root: UIViewController? = null
     private var controllerBuild: Deferred<UIViewController>? = null
 
+    /** The shell behind [root], kept so a 站点 switch can take it down; see [switchSite]. */
+    private var shell: NativeShellHandle? = null
+
+    /** What the scene gave [start] to install a root with, for the root a switch builds. */
+    private var installRoot: ((UIViewController) -> Unit)? = null
+    private var switching = false
+
     /**
      * Owned here, not in the container, because [register] has to run before the graph exists —
      * `BGTaskScheduler` launch handlers must be installed before the app finishes launching. Its
@@ -81,6 +91,7 @@ object NodysseyApp {
     fun registerBackgroundTasks() = offlineScheduler.register()
 
     fun start(onReady: (UIViewController) -> Unit) {
+        installRoot = onReady
         root?.let {
             onReady(it)
             return
@@ -121,7 +132,11 @@ object NodysseyApp {
             )
         // Set before the first composition asks for an image, and once: `setSafe` is a no-op if
         // something already installed a loader, which is what makes a second call harmless.
-        SingletonImageLoader.setSafe { context -> imageLoader(context, graph) }
+        //
+        // The loader asks for whichever graph is current at each request rather than closing over
+        // this one: a 站点 switch builds a new graph in this process, and its session carries the new
+        // site's `Referer`, which the image hosts check.
+        SingletonImageLoader.setSafe { context -> nodysseyImageLoader(context) { (container ?: graph).urlSession } }
         container = graph
         containerBuild = null
         return graph
@@ -137,8 +152,11 @@ object NodysseyApp {
         // No notification extra and no deep link to hand it yet: both arrive through
         // `UIApplicationDelegate`, and neither has an iOS half — the poll worker has no iOS
         // counterpart and Universal Links have no association file. See `AppLinkHandling.ios.kt`.
-        val controller = nativeShellViewController(graph)
+        val handle = nativeShell(graph)
+        val controller = handle.root
+        shell = handle
         root = controller
+        IosActiveSite.switcher = ::switchSite
         // Nothing left to await; the fast path above answers from here on.
         controllerBuild = null
         // On screen now: schedule the daily sweep and resume any queue a past run left behind — the
@@ -147,6 +165,50 @@ object NodysseyApp {
         return controller
     }
 
-    private fun imageLoader(context: PlatformContext, container: IosAppContainer): ImageLoader =
-        nodysseyImageLoader(context) { container.urlSession }
+    /**
+     * Moves the running app to [site] without leaving it — what Android does by restarting its process,
+     * done here by rebuilding in place, since an iOS app cannot relaunch itself.
+     *
+     * The order is the point. Everything built against the old site is stopped first — its screens'
+     * view models, the shell, any offline run, the graph's own scope — and only then does
+     * [ActiveSite] change, so no request still in flight can be answered by the new site and written
+     * into the old one's database. The new graph then opens its site's files (the shared ones come
+     * back as the same instances; see `ProcessWideInstances`), and its shell replaces the old one with
+     * a cross-fade. The back stacks start over, as they do on Android: a thread id on one site means
+     * something else on the other.
+     */
+    private fun switchSite(site: Site) {
+        if (switching || site == ActiveSite.current) return
+        switching = true
+        // Launched rather than run here: this is called from a tap inside the shell being torn down.
+        scope.launch {
+            try {
+                val previous = root
+                shell?.dispose()
+                shell = null
+                root = null
+                offlineScheduler.cancelRunning()
+                container?.shutdown()
+                container = null
+                ActiveSite.install(site)
+                val next = buildController()
+                val window = previous?.view?.window
+                if (window != null) {
+                    UIView.transitionWithView(
+                        window,
+                        duration = SWITCH_FADE_SECONDS,
+                        options = UIViewAnimationOptionTransitionCrossDissolve,
+                        animations = { window.rootViewController = next },
+                        completion = null,
+                    )
+                } else {
+                    installRoot?.invoke(next)
+                }
+            } finally {
+                switching = false
+            }
+        }
+    }
+
+    private const val SWITCH_FADE_SECONDS = 0.3
 }

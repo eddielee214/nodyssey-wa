@@ -67,6 +67,21 @@ class BgTaskOfflineScheduler(
     private var registered = false
     private var foregroundDrain: Job? = null
 
+    /** The background tasks' own runs, so [cancelRunning] reaches them as well as the foreground one. */
+    private val backgroundRuns = mutableSetOf<Job>()
+
+    /**
+     * Stops any drain or sweep in flight. For a 站点 switch: a run holds the graph it started with,
+     * and every URL it builds follows the active site, so one left running across the switch would
+     * fetch the new site's pages into the old site's database. [onLaunch] picks the new site's own
+     * queue up again once its graph is on screen.
+     */
+    fun cancelRunning() {
+        foregroundDrain?.cancel()
+        foregroundDrain = null
+        backgroundRuns.toList().forEach { it.cancel() }
+    }
+
     /**
      * Installs the two launch handlers. **Must run before the app finishes launching** — iOS traps
      * if a handler is registered afterwards — so `AppDelegate` calls this from
@@ -181,7 +196,11 @@ class BgTaskOfflineScheduler(
     ) {
         var success = false
         val job = scope.launch { success = work() }
-        job.invokeOnCompletion { cause -> task.setTaskCompletedWithSuccess(cause == null && success) }
+        backgroundRuns += job
+        job.invokeOnCompletion { cause ->
+            backgroundRuns -= job
+            task.setTaskCompletedWithSuccess(cause == null && success)
+        }
         task.expirationHandler = { job.cancel() }
     }
 

@@ -37,17 +37,24 @@ fun createPreferenceDataStore(
     keepOutOfBackup: Boolean = false,
     migrations: List<DataMigration<Preferences>> = emptyList(),
 ): DataStore<Preferences> =
-    PreferenceDataStoreFactory.createWithPath(
-        migrations = migrations,
-        produceFile = {
-            // The extension is Android's own, appended by `preferencesDataStore` there and stated here
-            // so the two platforms write a file of the same name as well as the same format.
-            val fileName = "$name.preferences_pb"
-            val directory = applicationSupportDirectory()
-            val path = if (keepOutOfBackup) backupExcludedPath(directory, fileName) else "$directory/$fileName"
-            path.toPath()
-        },
-    )
+    // Once per file per process. DataStore refuses a second instance over a file the first still
+    // serves, and it never lets go of one — so a dependency graph built again in the same process (a
+    // 站点 switch does that) is handed the instance the last graph opened, not a second one.
+    openStores.getOrOpen("$name|$keepOutOfBackup") {
+        PreferenceDataStoreFactory.createWithPath(
+            migrations = migrations,
+            produceFile = {
+                // The extension is Android's own, appended by `preferencesDataStore` there and stated here
+                // so the two platforms write a file of the same name as well as the same format.
+                val fileName = "$name.preferences_pb"
+                val directory = applicationSupportDirectory()
+                val path = if (keepOutOfBackup) backupExcludedPath(directory, fileName) else "$directory/$fileName"
+                path.toPath()
+            },
+        )
+    }
+
+private val openStores = ProcessWideInstances<DataStore<Preferences>>()
 
 /**
  * Where [fileName] lives once it is kept out of backup: inside [parent]'s [NO_BACKUP_DIRECTORY], which

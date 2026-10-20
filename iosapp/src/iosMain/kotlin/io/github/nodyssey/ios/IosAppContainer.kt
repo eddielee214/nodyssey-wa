@@ -2,6 +2,7 @@ package io.github.nodyssey.ios
 
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import io.github.nodyssey.core.ActiveSite
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.core.net.DynamicSignTransport
 import io.github.nodyssey.core.net.NodeSeekJsonClient
@@ -120,6 +121,7 @@ import io.github.plaza.core.update.ApkInstaller
 import io.github.plaza.core.update.isPreReleaseVersionName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -174,8 +176,28 @@ class IosAppContainer(
     /** See `DeviceAcceptLanguage.kt` — a request without this one is a request no browser makes. */
     private val acceptLanguage: String by lazy { deviceAcceptLanguage() }
 
-    /** Collects the proxy setting for as long as the process lives; nothing else runs on it. */
+    /**
+     * Collects the proxy setting, and runs the work repositories hand off past a screen, for as long as
+     * this graph is the app's. Until [shutdown], which is the process's end everywhere but a 站点
+     * switch.
+     */
     private val appScope = CoroutineScope(SupervisorJob() + dispatchers.default)
+
+    /**
+     * Stops everything this graph started, before `NodysseyApp` builds the next one for another site.
+     *
+     * The files stay open: the next graph is handed the same DataStore and Room instances (see
+     * `ProcessWideInstances`), and the screens that read them have already been torn down.
+     */
+    fun shutdown() {
+        appScope.cancel()
+    }
+
+    /**
+     * A draft store's name for the active site — the same names Android uses, so a NodeSeek draft
+     * keeps its file and a DeepFlood one gets its own rather than surfacing on the other site.
+     */
+    private fun perSiteStore(name: String) = "$name${ActiveSite.current.storageSuffix}"
 
     /**
      * 代理设置 as a route, or null when this kind of client is meant to go direct.
@@ -425,7 +447,7 @@ class IosAppContainer(
     }
 
     override val postComposerRepository: PostComposerRepository by lazy {
-        DefaultPostComposerRepository(createPreferenceDataStore("post-composer"), transport, dispatchers, clock)
+        DefaultPostComposerRepository(createPreferenceDataStore(perSiteStore("post-composer")), transport, dispatchers, clock)
     }
 
     override val accountSettingsRepository: AccountSettingsRepository by lazy {
@@ -481,7 +503,7 @@ class IosAppContainer(
 
     override val commentComposerRepository: CommentComposerRepository by lazy {
         DefaultCommentComposerRepository(
-            createPreferenceDataStore("comment-composer"),
+            createPreferenceDataStore(perSiteStore("comment-composer")),
             transport,
             dispatchers,
             clock,

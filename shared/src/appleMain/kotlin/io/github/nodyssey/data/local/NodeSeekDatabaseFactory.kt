@@ -3,6 +3,7 @@ package io.github.nodyssey.data.local
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.nodyssey.core.ActiveSite
+import io.github.nodyssey.data.ProcessWideInstances
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSFileManager
@@ -22,9 +23,18 @@ import platform.Foundation.NSUserDomainMask
  * on the same SQLite version as the schemas were generated against.
  */
 @OptIn(ExperimentalForeignApi::class)
-fun createNodeSeekDatabase(): NodeSeekDatabase =
+fun createNodeSeekDatabase(): NodeSeekDatabase {
+    val path = nodeSeekDatabasePath()
+    // One Room instance per file per process — see [ProcessWideInstances]. Each site has its own
+    // file, so switching away and back reuses the handle that site already had open.
+    return openDatabases.getOrOpen(path) { openNodeSeekDatabase(path) }
+}
+
+private val openDatabases = ProcessWideInstances<NodeSeekDatabase>()
+
+private fun openNodeSeekDatabase(path: String): NodeSeekDatabase =
     Room
-        .databaseBuilder<NodeSeekDatabase>(name = nodeSeekDatabasePath())
+        .databaseBuilder<NodeSeekDatabase>(name = path)
         .setDriver(BundledSQLiteDriver())
         .addMigrations(*NODESEEK_MIGRATIONS)
         // The same narrowing as the Android factory, and see the note there: only v1/v2 — the

@@ -653,13 +653,14 @@ class SettingsRepository(
          * rewrite the other's.
          *
          * The suffix is empty for NodeSeek, so an existing reader's arrangement is untouched — see
-         * `Site.storageSuffix`. Read once at class init, which is after the shell has installed
-         * `ActiveSite` and long before a switch, which restarts the process.
+         * `Site.storageSuffix`. Read on every use rather than once: Android restarts the process to
+         * switch, but iOS rebuilds the graph in place, and a key fixed at class init would keep
+         * writing the first site's arrangement after the switch.
          */
-        private val boardKeySuffix = ActiveSite.current.storageSuffix
-        private val KEY_HIDDEN_HOME_BOARDS = stringPreferencesKey("hidden_home_boards$boardKeySuffix")
-        private val KEY_HOME_BOARD_ORDER = stringPreferencesKey("home_board_order$boardKeySuffix")
-        private val KEY_DISABLED_HOME_BOARDS = stringPreferencesKey("disabled_home_boards$boardKeySuffix")
+        private val boardKeySuffix: String get() = ActiveSite.current.storageSuffix
+        private val KEY_HIDDEN_HOME_BOARDS get() = stringPreferencesKey("hidden_home_boards$boardKeySuffix")
+        private val KEY_HOME_BOARD_ORDER get() = stringPreferencesKey("home_board_order$boardKeySuffix")
+        private val KEY_DISABLED_HOME_BOARDS get() = stringPreferencesKey("disabled_home_boards$boardKeySuffix")
         private val KEY_POST_TOOLBAR = stringPreferencesKey("post_toolbar_actions")
         private val KEY_REPLY_TOOLBAR = stringPreferencesKey("reply_toolbar_actions")
         private val KEY_MESSAGE_TOOLBAR = stringPreferencesKey("message_toolbar_actions")
