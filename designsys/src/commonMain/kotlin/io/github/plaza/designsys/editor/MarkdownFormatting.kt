@@ -149,6 +149,45 @@ fun TextFieldBuffer.appendBlock(block: String) {
     replace(length, length, separator + block)
 }
 
+/**
+ * Puts an image in at the caret, as a block of its own — what the reader asked for once they had
+ * written around a picture and found it at the bottom of the post instead of where they were.
+ *
+ * Never inside a line: blank lines are added before and after as needed, so the sentence the caret
+ * sat in is left whole on one side and the image starts a line of its own (it has to, to render as
+ * one). A selection is kept and the image goes after it — the selection is the reader's text, not
+ * a placeholder. The caret ends up past the image, at the start of whatever follows, so typing
+ * carries on below the picture.
+ */
+fun TextFieldBuffer.insertBlockAtCaret(block: String) {
+    val at = selection.max
+    val text = asCharSequence()
+    val before = text.subSequence(0, at)
+    val after = text.subSequence(at, text.length)
+    val lead = when {
+        before.isBlank() -> ""
+        before.endsWith("\n\n") -> ""
+        before.endsWith("\n") -> "\n"
+        else -> "\n\n"
+    }
+    val trail = when {
+        after.isEmpty() -> "\n"
+        after.startsWith("\n\n") -> ""
+        after.startsWith("\n") -> "\n"
+        else -> "\n\n"
+    }
+    replace(at, at, lead + block + trail)
+    // Past the image and the line breaks after it — at most the blank line that separates it.
+    val now = asCharSequence()
+    var caret = at + lead.length + block.length
+    var skipped = 0
+    while (caret < now.length && now[caret] == '\n' && skipped < 2) {
+        caret++
+        skipped++
+    }
+    placeCursorBeforeCharAt(caret)
+}
+
 /** Removes an attachment's Markdown again when its cell is dismissed. */
 fun TextFieldBuffer.removeBlock(block: String) {
     if (block.isEmpty()) return
@@ -158,7 +197,10 @@ fun TextFieldBuffer.removeBlock(block: String) {
         .firstNotNullOfOrNull { candidate ->
             body.indexOf(candidate).takeIf { it >= 0 }?.let { it to candidate.length }
         } ?: return
-    delete(index.first, index.first + index.second)
+    var end = index.first + index.second
+    // The line [insertBlockAtCaret] leaves under an image at the end of the body goes with it.
+    if (end == body.length - 1 && body[end] == '\n') end++
+    delete(index.first, end)
 }
 
 /** The URL slot in `](https://)`, i.e. just past the `](`. Shared by the link and image actions. */

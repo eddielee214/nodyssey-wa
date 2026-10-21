@@ -6,6 +6,7 @@ import io.github.plaza.designsys.editor.EditorAction
 import io.github.plaza.designsys.editor.appendBlock
 import io.github.plaza.designsys.editor.applyMarkdown
 import io.github.plaza.designsys.editor.deleteBackwards
+import io.github.plaza.designsys.editor.insertBlockAtCaret
 import io.github.plaza.designsys.editor.removeBlock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -105,6 +106,55 @@ class MarkdownEditingTest {
         state.edit { appendBlock("![a](u)") }
 
         assertEquals(TextRange(3), state.selection)
+    }
+
+    @Test
+    fun `an image inserted mid-sentence goes on its own block after the sentence is split at the caret`() {
+        val state = field("第一段写完了第二段", TextRange(6))
+
+        state.edit { insertBlockAtCaret("![a](u)") }
+
+        assertEquals("第一段写完了\n\n![a](u)\n\n第二段", state.text.toString())
+        // Past the image and its blank line, at the start of what followed.
+        assertEquals(TextRange("第一段写完了\n\n![a](u)\n\n".length), state.selection)
+    }
+
+    @Test
+    fun `an image inserted on an empty line reuses the line breaks already there`() {
+        val text = "上一段\n\n\n\n下一段"
+        val state = field(text, TextRange(5))
+
+        state.edit { insertBlockAtCaret("![a](u)") }
+
+        assertEquals("上一段\n\n![a](u)\n\n下一段", state.text.toString())
+    }
+
+    @Test
+    fun `an image inserted at the end leaves the caret on a fresh line below it`() {
+        val state = field("正文", TextRange(2))
+
+        state.edit { insertBlockAtCaret("![a](u)") }
+
+        assertEquals("正文\n\n![a](u)\n", state.text.toString())
+        assertEquals(TextRange(state.text.length), state.selection)
+    }
+
+    @Test
+    fun `an image inserted into an empty body has no leading blank lines`() {
+        val state = field("", TextRange(0))
+
+        state.edit { insertBlockAtCaret("![a](u)") }
+
+        assertEquals("![a](u)\n", state.text.toString())
+    }
+
+    @Test
+    fun `a selection is kept and the image goes after it`() {
+        val state = field("保留这几个字", TextRange(2, 4))
+
+        state.edit { insertBlockAtCaret("![a](u)") }
+
+        assertEquals("保留这几\n\n![a](u)\n\n个字", state.text.toString())
     }
 
     @Test

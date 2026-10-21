@@ -452,7 +452,7 @@ class PostComposerViewModelTest {
     }
 
     @Test
-    fun `an uploaded image is appended to the body and removed with its cell`() = runTest(dispatcher) {
+    fun `an uploaded image lands at the caret and is removed with its cell`() = runTest(dispatcher) {
         val viewModel = viewModel()
         advanceUntilIdle()
         viewModel.bodyState.typeText("正文")
@@ -464,7 +464,8 @@ class PostComposerViewModelTest {
 
         val attachment = viewModel.uiState.value.attachments.single()
         assertEquals(UploadStatus.UPLOADED, attachment.status)
-        assertEquals("正文\n\n![screenshot.png](https://cdn.nodeimage.com/i/fake.webp)", viewModel.uiState.value.body)
+        // The caret was at the end of 正文, so that is where it lands, with a line to keep typing on.
+        assertEquals("正文\n\n![screenshot.png](https://cdn.nodeimage.com/i/fake.webp)\n", viewModel.uiState.value.body)
 
         viewModel.removeAttachment(attachment)
         advanceUntilIdle()

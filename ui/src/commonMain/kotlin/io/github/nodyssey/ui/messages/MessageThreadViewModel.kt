@@ -33,8 +33,8 @@ import io.github.plaza.core.net.SiteException
 import io.github.plaza.core.runCatchingExceptCancellation
 import io.github.plaza.designsys.editor.EditorAction
 import io.github.plaza.designsys.editor.ToolbarLayout
-import io.github.plaza.designsys.editor.appendBlock
 import io.github.plaza.designsys.editor.editFromViewModel
+import io.github.plaza.designsys.editor.insertBlockAtCaret
 import io.github.plaza.designsys.editor.removeBlock
 import io.github.plaza.designsys.editor.toolbarLayout
 import kotlinx.coroutines.Job
@@ -104,12 +104,11 @@ class MessageThreadViewModel(
         uploads.attachments
             .onEach { attachments -> _uiState.update { it.copy(attachments = attachments) } }
             .launchIn(viewModelScope)
-        // Appended rather than spliced at the caret: the upload lands while typing continues, and
-        // dropping `![](…)` mid-sentence is both surprising and hard to undo.
+        // At the caret, on a line of its own, as in the composers — see [insertBlockAtCaret].
         uploads.uploaded
             .onEach { attachment ->
                 val markdown = attachment.markdown ?: return@onEach
-                draftState.editFromViewModel { appendBlock(markdown) }
+                draftState.editFromViewModel { insertBlockAtCaret(markdown) }
             }.launchIn(viewModelScope)
         settings?.settings
             ?.map { it.messageToolbarActions }
