@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -313,9 +314,28 @@ class PostDetailViewModel(
         // A thread read moments ago needs no request — but only if the page being asked for is
         // one of the pages it cached; freshness says nothing about a page nobody has fetched.
         val cached = repository.cachedPages(postId)
-        if (cached == null || start !in cached || hasUnreadReplies || !repository.isThreadFresh(postId)) {
+        if (
+            cached == null ||
+            start !in cached ||
+            hasUnreadReplies ||
+            !repository.isThreadFresh(postId) ||
+            !isFloorCached(floor)
+        ) {
             load(page = start, replacesWindow = true)
         }
+    }
+
+    /**
+     * Whether the floor this read was opened on is already in the cached copy.
+     *
+     * Freshness alone was not enough: a notification about a reply posted a minute ago lands on a
+     * page cached two minutes ago — fresh, and the right page, but without the one floor the reader
+     * came to see. Opened from that notification the thread showed everything except the reply.
+     */
+    private suspend fun isFloorCached(floor: String?): Boolean {
+        val number = NodeSeekSite.parseFloorNumber(floor) ?: return true
+        val snapshot = repository.thread(postId).first() ?: return false
+        return (listOfNotNull(snapshot.body) + snapshot.comments).any { NodeSeekSite.parseFloorNumber(it.floor) == number }
     }
 
     /** Where this thread opens: the floor's page, the link's page, or the top. */
