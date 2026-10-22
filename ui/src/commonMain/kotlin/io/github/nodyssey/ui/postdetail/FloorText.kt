@@ -61,6 +61,8 @@ private fun blockText(
 
         is RichNode.Fold -> listOf(node.title, blocksText(node.children, images)).filter(String::isNotBlank).joinToString("\n")
 
+        is RichNode.Callout -> listOf(node.title, blocksText(node.children, images)).filter(String::isNotBlank).joinToString("\n")
+
         is RichNode.Tabs ->
             node.tabs.joinToString("\n\n") { tab ->
                 listOf(tab.title, blocksText(tab.children, images)).filter(String::isNotBlank).joinToString("\n")

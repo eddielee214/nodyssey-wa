@@ -35,6 +35,8 @@ private fun RichNode.collectImageUrls(into: MutableSet<String>) {
 
         is RichNode.Fold -> children.forEach { it.collectImageUrls(into) }
 
+        is RichNode.Callout -> children.forEach { it.collectImageUrls(into) }
+
         is RichNode.Tabs -> tabs.forEach { tab -> tab.children.forEach { it.collectImageUrls(into) } }
 
         is RichNode.ListBlock -> items.forEach { item -> item.forEach { it.collectImageUrls(into) } }

@@ -92,10 +92,11 @@ object RichContentParser {
 
         "table" -> listOf(table(element))
 
-        "details" -> listOf(fold(element))
+        "details" -> listOf(if (element.hasClass(CALLOUT_CLASS)) callout(element) else fold(element))
 
         "div" ->
             when {
+                element.hasClass(CALLOUT_CLASS) -> listOf(callout(element))
                 element.hasClass("quote") -> listOf(RichNode.Quote(parseBlocks(element.childNodes())))
                 element.hasClass(MAGIC_TABS_CLASS) -> magicTabs(element)
                 else -> paragraphBlocks(element)
@@ -283,6 +284,36 @@ object RichContentParser {
             open = element.hasAttr("open"),
         )
     }
+
+    /**
+     * `<div class="markdown-alert markdown-alert-note">` — what the editor writes for `> [!note] 标题`,
+     * or a `<details>` of the same classes for the foldable `[!note]+` / `[!note]-` forms.
+     *
+     * The title is the `markdown-alert-title` child, lifted out for the same reason [fold] lifts its
+     * summary: left in place it is the first words of the body. It carries an icon `<svg>` with no
+     * text in it, so its text is the title alone — the author's, or the site's English default.
+     */
+    private fun callout(element: Element): RichNode {
+        val title = element.children().firstOrNull { it.hasClass(CALLOUT_TITLE_CLASS) }
+        val kind =
+            element.classNames()
+                .firstOrNull { it.startsWith(CALLOUT_KIND_PREFIX) }
+                ?.removePrefix(CALLOUT_KIND_PREFIX)
+                ?.lowercase()
+                ?: "note"
+        val collapsible = element.tagName() == "details"
+        return RichNode.Callout(
+            kind = kind,
+            title = title?.text()?.trim().orEmpty(),
+            children = parseBlocks(element.childNodes().filterNot { it === title }),
+            collapsible = collapsible,
+            open = collapsible && element.hasAttr("open"),
+        )
+    }
+
+    private const val CALLOUT_CLASS = "markdown-alert"
+    private const val CALLOUT_TITLE_CLASS = "markdown-alert-title"
+    private const val CALLOUT_KIND_PREFIX = "markdown-alert-"
 
     private fun codeBlock(element: Element): RichNode {
         val code = element.selectFirst("code")

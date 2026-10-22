@@ -157,6 +157,31 @@ sealed interface RichNode {
         val open: Boolean = false,
     ) : RichNode
 
+    /**
+     * A callout — `> [!note] 标题` in the site's editor — drawn as a tinted box under a coloured title.
+     *
+     * The site writes it as `<div class="markdown-alert markdown-alert-note">`, and an unrecognised
+     * div is flattened: the title ran into the first line of the body as one paragraph, and the box
+     * that told the reader "this is the part to read" was gone.
+     *
+     * [kind] is the site's own word (`note`, `tip`, `important`, `warning`, `caution`) rather than an
+     * enum, so a kind the site adds later still decodes from a cached row and is drawn as a note.
+     * [collapsible] is the `[!note]+` / `[!note]-` form, which the site writes as `<details>`; [open]
+     * is whether it starts open, as [Fold.open] is.
+     *
+     * Note for the next migration: this discriminator is new, so a *downgrade* would fail to decode
+     * bodies cached by a newer build. Reading old rows is unaffected.
+     */
+    @Serializable
+    @SerialName("alert")
+    data class Callout(
+        val kind: String,
+        val title: String,
+        val children: List<RichNode>,
+        val collapsible: Boolean = false,
+        val open: Boolean = false,
+    ) : RichNode
+
     @Serializable
     @SerialName("list")
     data class ListBlock(

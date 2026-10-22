@@ -3110,6 +3110,8 @@ private fun List<RichNode>.imageUrls(): List<String> =
             // past the images of a fold it was opened from would be counting a different post.
             is RichNode.Fold -> node.children.imageUrls()
 
+            is RichNode.Callout -> node.children.imageUrls()
+
             else -> emptyList()
         }
     }

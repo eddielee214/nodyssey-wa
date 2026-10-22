@@ -56,6 +56,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -496,6 +497,18 @@ private fun RichBlock(
                 stardustContent = stardustContent,
             )
 
+        is RichNode.Callout ->
+            CalloutBlock(
+                node = node,
+                onLinkClick = onLinkClick,
+                onImageClick = onImageClick,
+                onQuoteRefClick = onQuoteRefClick,
+                textStyle = textStyle,
+                voteContent = voteContent,
+                codeBlockContent = codeBlockContent,
+                stardustContent = stardustContent,
+            )
+
         RichNode.Divider ->
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -666,6 +679,103 @@ private fun FoldBlock(
         }
     }
 }
+
+/**
+ * A callout: a tinted box with a bar down its left edge and the title in the kind's colour, as the
+ * site draws `> [!note] 标题`. See `CalloutStyle.kt` for where the colours and icons come from.
+ *
+ * The bar is painted behind the column rather than laid out beside it: a sibling bar would have to
+ * be as tall as the body, which takes an intrinsic measurement, and the images a callout can hold
+ * measure through a subcomposition that refuses one.
+ *
+ * The foldable form opens and closes like [FoldBlock], from the title row; the plain form is always
+ * open and its title is not a button.
+ */
+@Composable
+private fun CalloutBlock(
+    node: RichNode.Callout,
+    onLinkClick: (String) -> Unit,
+    onImageClick: (String) -> Unit,
+    onQuoteRefClick: (InlineNode.QuoteRef) -> Unit,
+    textStyle: TextStyle,
+    voteContent: @Composable (Long) -> Unit,
+    codeBlockContent: @Composable (RichNode.CodeBlock) -> Unit,
+    stardustContent: @Composable (RichNode.StardustReceive) -> Unit,
+) {
+    val eink = LocalEinkMode.current
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    // On paper a tint is a dither and a colour is a grey; the bar and the icon carry it in ink.
+    val accent = if (eink) MaterialTheme.colorScheme.onSurface else calloutAccent(node.kind, dark)
+    var expanded by rememberSaveable(node.kind, node.title) { mutableStateOf(!node.collapsible || node.open) }
+    val chevronAngle by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "callout-chevron",
+    )
+
+    Column(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(if (eink) Color.Transparent else accent.copy(alpha = CALLOUT_TINT_ALPHA))
+            .drawBehind { drawRect(accent, size = Size(CALLOUT_BAR_WIDTH.toPx(), size.height)) }
+            .padding(start = CALLOUT_BAR_WIDTH + Spacing.md, end = Spacing.md, top = Spacing.sm, bottom = Spacing.md),
+    ) {
+        Row(
+            modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(if (node.collapsible) Modifier.clickable { expanded = !expanded } else Modifier)
+                .padding(vertical = Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = calloutIcon(node.kind),
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(Spacing.sm))
+            Text(
+                text = node.title.ifBlank { calloutDefaultTitle(node.kind) },
+                style = textStyle.copy(fontWeight = FontWeight.SemiBold, color = accent),
+                modifier = Modifier.weight(1f),
+            )
+            if (node.collapsible) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription =
+                    stringResource(
+                        if (expanded) Res.string.richtext_fold_collapse else Res.string.richtext_fold_expand,
+                    ),
+                    tint = accent,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(chevronAngle),
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = expanded) {
+            RichBlockColumn(
+                nodes = node.children,
+                onLinkClick = onLinkClick,
+                onImageClick = onImageClick,
+                onQuoteRefClick = onQuoteRefClick,
+                textStyle = textStyle,
+                voteContent = voteContent,
+                codeBlockContent = codeBlockContent,
+                stardustContent = stardustContent,
+                modifier = Modifier.padding(top = Spacing.sm),
+            )
+        }
+    }
+}
+
+/** Twice the site's `0a`: on a phone held at arm's length 4% of blue is no box at all. */
+private const val CALLOUT_TINT_ALPHA = 0.08f
+private val CALLOUT_BAR_WIDTH = 4.dp
 
 /**
  * An image on its own line: screen-wide when it is a screenshot, natural size when it is not.

@@ -123,6 +123,11 @@ private class PreviewBuilder(
                     appendBlocks(node.children)
                 }
 
+                is RichNode.Callout -> {
+                    text(node.title)
+                    appendBlocks(node.children)
+                }
+
                 RichNode.Divider -> Unit
             }
             // Blocks were paragraphs; without this the last word of one runs into the first of the next.
