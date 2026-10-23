@@ -53,11 +53,6 @@ ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装�
 - **阅读体验**：离线缓存、已读标记、浏览历史与阅读位置、图片预览 / 保存 / 分享、六种图床上传
 - **界面**：Material 3 Expressive；简体 / 繁體 / English 三语
 
-## 自己编译
-
-需要一台装了 Xcode 的 Mac，以及 JDK 21。用 Xcode 打开 `iosapp/Nodyssey.xcodeproj`，选 `Nodyssey` scheme 编译。第一次编译 Kotlin 部分比较慢。
-
-模块划分和架构约定见 [docs/architecture.md](docs/architecture.md)。
 
 ## 致谢
 
