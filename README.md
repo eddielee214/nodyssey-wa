@@ -8,10 +8,22 @@
 [![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/youyou0214OK/nodyssey-wa/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
-<img src="docs/screenshots/post-list-light.png" width="200" alt="帖子列表" />
-<img src="docs/screenshots/post-detail-dark.png" width="200" alt="帖子详情" />
-<img src="docs/screenshots/notifications-light.png" width="200" alt="消息通知" />
-<img src="docs/screenshots/profile-light.png" width="200" alt="我的" />
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/ios-home-hot-button.png" width="200" alt="首页热榜按钮" /></td>
+    <td align="center"><img src="docs/screenshots/ios-hot-list.png" width="200" alt="热榜" /></td>
+    <td align="center"><img src="docs/screenshots/ios-svg-author-badges.png" width="200" alt="SVG 图片和作者标签" /></td>
+    <td align="center"><img src="docs/screenshots/ios-callout.png" width="200" alt="提示框" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>新增</b> 头像旁的火苗按钮</td>
+    <td align="center"><b>新增</b> 热榜：实时 / 日榜 / 周榜</td>
+    <td align="center"><b>修复</b> IP 报告 SVG 不再是黑块<br><b>新增</b> 注册天数 · 等级 · 风险</td>
+    <td align="center"><b>新增</b> 和网页一样的彩色提示框</td>
+  </tr>
+</table>
+
+<sub>以上均为 iOS 模拟器实拍</sub>
 
 </div>
 
