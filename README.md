@@ -1,24 +1,12 @@
 <div align="center">
 
-# Nodyssey
+# Nodyssey iOS 改版
 
-[NodeSeek](https://www.nodeseek.com/) 的非官方开源 Android 客户端，Kotlin + Jetpack Compose，帖子渲染为原生 Compose 内容。
+[NodeSeek](https://www.nodeseek.com/) 的非官方客户端 [Nodyssey](https://github.com/5151561/nodyssey) 的 iOS 改版，在原项目基础上修了 iPhone 上的问题，并加了几个小功能。
 
-> 因个人原因项目整体暂停维护一段时间。预计12月底回归。期间无暇顾及issue和pr。
-
-[![Release](https://img.shields.io/github/v/release/5151561/nodyssey?include_prereleases&sort=semver&label=Release&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
-[![Downloads](https://img.shields.io/github/downloads/5151561/nodyssey/total?label=Downloads&color=2C6E7F)](https://github.com/5151561/nodyssey/releases)
-[![Stars](https://img.shields.io/github/stars/5151561/nodyssey?style=flat&logo=github&label=Stars)](https://github.com/5151561/nodyssey/stargazers)
-[![CI](https://img.shields.io/github/actions/workflow/status/5151561/nodyssey/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/5151561/nodyssey/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/5151561/nodyssey?label=License)](LICENSE)
-
-[![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/5151561/nodyssey/releases)
-[![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Compose](https://img.shields.io/badge/Jetpack_Compose-M3_Expressive-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)
-
-[![Website](https://img.shields.io/badge/宣传页-nodyssey-2C6E7F?logo=githubpages&logoColor=white)](https://5151561.github.io/nodyssey/)
-[![Telegram Channel](https://img.shields.io/badge/Telegram-Channel-26A5E4?logo=telegram&logoColor=white)](https://t.me/nodyssey_official)
-[![Telegram Group](https://img.shields.io/badge/Telegram-Group-26A5E4?logo=telegram&logoColor=white)](https://t.me/+97ANIwVaCYk1MjQ1)
+[![Release](https://img.shields.io/github/v/release/youyou0214OK/nodyssey-wa?include_prereleases&label=Release&color=2C6E7F)](https://github.com/youyou0214OK/nodyssey-wa/releases)
+[![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/youyou0214OK/nodyssey-wa/releases)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 <img src="docs/screenshots/post-list-light.png" width="200" alt="帖子列表" />
 <img src="docs/screenshots/post-detail-dark.png" width="200" alt="帖子详情" />
@@ -27,47 +15,59 @@
 
 </div>
 
-## 下载
+> 这是个人维护的改版，**不是原作者发布的版本**。改版的问题请在本仓库反馈，不要去打扰原作者。
 
-到 [Releases](https://github.com/5151561/nodyssey/releases) 下载最新 APK，应用内也可以检查更新。各版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+## 下载与安装
 
-> **关于 iOS**：项目只维护 Android。。
+到 [Releases](https://github.com/youyou0214OK/nodyssey-wa/releases) 下载 `.ipa`。
 
-## 功能
+ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装，例如：
+
+- [Sideloadly](https://sideloadly.io/)：电脑连上 iPhone，拖入 ipa，填 Apple ID 即可安装（免费 Apple ID 签的 App 7 天后要重签）
+- [AltStore](https://altstore.io/)
+- 有开发者证书的话，可以用自己的证书和描述文件重签
+
+## 相对原版的改动
+
+**修复**
+
+- 用语音输入（听写）时闪退
+- 发帖、编辑个人简介时界面卡死后闪退
+- 从通知打开帖子时，看不到刚发的新回复
+- 上传的图片插在光标处，不再加到正文最后
+- 编辑资料点保存后自动收起键盘，简介栏的回车键改为「完成」
+- IP 质量报告这类 SVG 图片显示成黑块
+
+**新增**
+
+- 帖子和每层回复显示作者的注册天数、等级和风险提示
+- 首页热榜（实时 / 日榜 / 周榜，数据来自第三方 bimg.eu.org），按钮放在头像旁边
+- 切换 NodeSeek / DeepFlood 立即生效，不用重启 App
+- 帖子里的提示框（`> [!note] 标题`）显示成和网页一样的彩色框
+
+## 原版功能
 
 - **浏览与互动**：发帖、评论、编辑；点赞 / 反对 / 投喂鸡腿、收藏、签到；投票帖阅读与投票
 - **消息与社交**：通知与未读数、私信、关注 / 粉丝、用户空间
 - **账号**：鸡腿与星辰流水、星辰转账与收款码、等级进度、账号设置
 - **阅读体验**：离线缓存、已读标记、浏览历史与阅读位置、图片预览 / 保存 / 分享、六种图床上传
-- **界面**：Material 3 Expressive，宽屏自动换侧边栏；简体 / 繁體 / English 三语
+- **界面**：Material 3 Expressive；简体 / 繁體 / English 三语
 
-## 构建
+## 自己编译
 
-需要 JDK 21 和 Android SDK 37。
+需要一台装了 Xcode 的 Mac，以及 JDK 21。用 Xcode 打开 `iosapp/Nodyssey.xcodeproj`，选 `Nodyssey` scheme 编译。第一次编译 Kotlin 部分比较慢。
 
-```bash
-./gradlew :app:assembleDebug
-```
-
-模块划分和架构约定见 [docs/architecture.md](docs/architecture.md) 与 [docs/README.md](docs/README.md)。
-
-## 参与
-
-- 反馈问题：[Issues](https://github.com/5151561/nodyssey/issues/new/choose)，请带上 App 版本、机型和 Android 版本
-- 用法提问：[Telegram 群组](https://t.me/+97ANIwVaCYk1MjQ1)
-- 提 PR 前请先读 [CONTRIBUTING.md](CONTRIBUTING.md)
+模块划分和架构约定见 [docs/architecture.md](docs/architecture.md)。
 
 ## 致谢
 
-- [tyrad/nodeseek](https://github.com/tyrad/nodeseek)（iOS 客户端，MIT）—— 站点结构的逆向参考
-- [mrzhiin/seekmate](https://github.com/mrzhiin/seekmate)（React Native 客户端，MIT）—— 部分 JSON 端点的发现来源
-
-本项目独立实现，不共享代码。
+- [5151561/nodyssey](https://github.com/5151561/nodyssey)：原项目，本改版的全部基础
+- [tyrad/nodeseek](https://github.com/tyrad/nodeseek)、[mrzhiin/seekmate](https://github.com/mrzhiin/seekmate)：原项目致谢的参考实现
 
 ## 说明
 
-本项目与 NodeSeek 官方无关，是社区自制客户端。请求频率保持克制，不做自动化刷分；仓库中不保存任何 Cookie 或凭据。
+本项目与 NodeSeek 官方无关，是社区自制客户端。仓库中不保存任何 Cookie 或凭据。
 
 ## 许可
 
-[GPL-3.0](LICENSE)
+与原项目相同，[GPL-3.0](LICENSE)。本仓库就是对应 ipa 的完整源码。
