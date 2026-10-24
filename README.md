@@ -4,9 +4,11 @@
 
 [NodeSeek](https://www.nodeseek.com/) 的非官方客户端 [Nodyssey](https://github.com/5151561/nodyssey) 的 iOS 改版，在原项目基础上修了 iPhone 上的问题，并加了几个小功能。
 
-[![Release](https://img.shields.io/github/v/release/youyou0214OK/nodyssey-wa?include_prereleases&label=Release&color=2C6E7F)](https://github.com/youyou0214OK/nodyssey-wa/releases)
-[![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/youyou0214OK/nodyssey-wa/releases)
+[![Release](https://img.shields.io/github/v/release/eddielee214/nodyssey-wa?include_prereleases&label=Release&color=2C6E7F)](https://github.com/eddielee214/nodyssey-wa/releases)
+[![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/eddielee214/nodyssey-wa/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
+
+基于原版 v1.2.22 · 个人维护，不保证跟进原版更新
 
 <table>
   <tr>
@@ -27,11 +29,11 @@
 
 </div>
 
-> 这是个人维护的改版，**不是原作者发布的版本**。改版的问题请在本仓库反馈，不要去打扰原作者。
+> 这是个人维护的改版，**不是原作者发布的版本**。改版的问题请在本仓库反馈，不要去打扰原作者。只做 iOS，安卓请直接用[原版](https://github.com/5151561/nodyssey)。
 
 ## 下载与安装
 
-到 [Releases](https://github.com/youyou0214OK/nodyssey-wa/releases) 下载 `.ipa`。
+到 [Releases](https://github.com/eddielee214/nodyssey-wa/releases) 下载 `.ipa`。
 
 ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装，例如：
 
