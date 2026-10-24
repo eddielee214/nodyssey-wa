@@ -25,6 +25,17 @@
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/ipad-home.png" width="400" alt="iPad 首页：左边列表，右边帖子" /></td>
+    <td align="center"><img src="docs/screenshots/ipad-hot.png" width="400" alt="iPad 热榜：左边热榜，右边帖子" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>iPad</b> 左边列表，右边帖子，正在看的那条高亮</td>
+    <td align="center"><b>iPad</b> 热榜里点开的帖子也在旁边显示</td>
+  </tr>
+</table>
+
 <sub>截图都在 iOS 模拟器里拍的</sub>
 
 </div>
