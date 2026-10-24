@@ -108,4 +108,19 @@ class PaneRoleTest {
         assertTrue(stack.showsListPane())
         assertTrue(stack.sitsBesideList(thread))
     }
+
+    /** The arrow on the hot list used to close the thread beside it instead of the list. */
+    @Test
+    fun `a list's own back closes the list and what is open beside it`() {
+        val stack = mutableListOf<NavKey>(PostListKey, HotListKey, PostDetailKey(1), PostDetailKey(2))
+        stack.closeList(HotListKey)
+        assertEquals(listOf<NavKey>(PostListKey), stack)
+    }
+
+    @Test
+    fun `on a narrow window a list's back is the one pop it always was`() {
+        val stack = mutableListOf<NavKey>(PostListKey, HotListKey)
+        stack.closeList(HotListKey)
+        assertEquals(listOf<NavKey>(PostListKey), stack)
+    }
 }

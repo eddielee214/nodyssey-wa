@@ -93,7 +93,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
         CompositionLocalProvider(LocalSelectedPostId provides selectedPostId) {
             HotListRoute(
                 viewModel = viewModel,
-                onBack = { backStack.removeLastOrNull() },
+                onBack = { backStack.closeList(key) },
                 // What the row shows is what the thread can draw before its own fetch answers.
                 onPostClick = { entry ->
                     backStack.openFromList(
@@ -118,7 +118,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
             // A user result now has a screen of its own, so it stays in the app. Finding
             // yourself in search must open the same self-shaped space 我的 opens.
             onUserClick = openSpace,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = { backStack.closeList(key) },
             onSignIn = { backStack.add(SignInKey) },
             onVerify = { backStack.add(WebKey(it, siteTitle, WebViewGoal.CHALLENGE)) },
             // No `onNavigationBarHiddenChanged`: 搜索 is not a tab root any more, so on a phone the

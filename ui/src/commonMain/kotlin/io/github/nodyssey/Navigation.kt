@@ -895,6 +895,22 @@ internal fun MutableList<NavKey>.openFromList(
 }
 
 /**
+ * Back from [list] itself: the list goes, and whatever was opened beside it goes with it.
+ *
+ * A list's back arrow used to pop the top of the stack, which on a wide window is the thread in the
+ * other half: the arrow on the left closed the right, and only a second press left the list. On a
+ * narrow window the list is the top and this is the same single pop.
+ */
+internal fun MutableList<NavKey>.closeList(list: NavKey) {
+    val index = indexOfLast { it === list }
+    if (index < 0) {
+        removeLastOrNull()
+        return
+    }
+    while (size > index) removeAt(lastIndex)
+}
+
+/**
  * The pane metadata for a destination, derived from [paneRoleOf].
  *
  * The placeholder is resolved here rather than inside the lambda so that a list pane added without a

@@ -45,7 +45,7 @@ internal fun EntryProviderScope<NavKey>.spaceEntries(nav: StackEntryScope) = wit
             )
         UserSpaceRoute(
             viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = { backStack.closeList(key) },
             onPostClick = { postId, floor ->
                 backStack.openFromList(key, PostDetailKey(postId, floor), isListDetailExpanded())
             },
