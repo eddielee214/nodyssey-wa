@@ -187,6 +187,8 @@ private fun HotListRows(
 ) {
     val layers = LocalPlazaLayers.current
     LazyColumn(
+        // No bounce under pull-to-refresh; see the feed's list in `PostListScreen`.
+        overscrollEffect = null,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = LayerPageGutter, end = LayerPageGutter, bottom = Spacing.xxl),
     ) {
