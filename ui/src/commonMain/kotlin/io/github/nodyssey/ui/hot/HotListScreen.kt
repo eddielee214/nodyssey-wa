@@ -1,8 +1,8 @@
 package io.github.nodyssey.ui.hot
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -136,13 +137,23 @@ fun HotListScreen(
                 onSelect = { onSelect(HotListPeriod.entries[it]) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = LayerPageGutter, vertical = Spacing.sm),
             )
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                when {
-                    list == null && state.error != null -> HotListErrorState(state.error, onRetry = onRefresh)
+            // Keyed on the tab as well as the phase, so switching 实时 → 日榜 fades one list into the
+            // other instead of swapping rows under the reader's thumb. The scheme's effects spec
+            // rather than Crossfade's own tween: 墨水屏模式 and 移除动画 snap the scheme, not the tween.
+            val pane = HotPane(state.period, hotPhase(list, state.error))
+            Crossfade(
+                targetState = pane,
+                animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                label = "hot-pane",
+            ) { shown ->
+                val shownList = state.lists[shown.period]
+                when (shown.phase) {
+                    HotPhase.Error -> HotListErrorState(state.error ?: HotListError.Unparsable, onRetry = onRefresh)
 
-                    list == null -> LoadingState()
+                    HotPhase.Loading -> LoadingState()
 
-                    list.entries.isEmpty() ->
+                    HotPhase.Empty ->
                         StatusView(
                             icon = PlazaIcons.LocalFireDepartment,
                             shape = StatusShapes.Empty,
@@ -151,7 +162,16 @@ fun HotListScreen(
                             title = stringResource(Res.string.hot_empty_title),
                         )
 
-                    else -> HotListRows(list.entries, onPostClick)
+                    // A refresh with a list already on screen keeps the list and says so from the
+                    // top, the way the feed does; before, the only sign was a greyed-out button.
+                    HotPhase.Rows ->
+                        PullToRefreshBox(
+                            isRefreshing = state.isLoading && shown.period == state.period,
+                            onRefresh = onRefresh,
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            HotListRows(shownList?.entries.orEmpty(), onPostClick)
+                        }
                 }
             }
         }
@@ -248,6 +268,24 @@ private fun updatedLabel(
         else -> stringResource(Res.string.hot_updated_hours, (minutes / 60).toInt())
     }
 }
+
+private enum class HotPhase { Loading, Error, Empty, Rows }
+
+private data class HotPane(
+    val period: HotListPeriod,
+    val phase: HotPhase,
+)
+
+private fun hotPhase(
+    list: HotList?,
+    error: HotListError?,
+): HotPhase =
+    when {
+        list == null && error != null -> HotPhase.Error
+        list == null -> HotPhase.Loading
+        list.entries.isEmpty() -> HotPhase.Empty
+        else -> HotPhase.Rows
+    }
 
 private fun HotListPeriod.labelRes(): StringResource =
     when (this) {
