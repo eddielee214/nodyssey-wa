@@ -2,7 +2,7 @@
 
 # Nodyssey iOS 改版
 
-[NodeSeek](https://www.nodeseek.com/) 的非官方客户端 [Nodyssey](https://github.com/5151561/nodyssey) 的 iOS 改版，在原项目基础上修了 iPhone 上的问题，并加了几个小功能。
+[Nodyssey](https://github.com/5151561/nodyssey) 是 [NodeSeek](https://www.nodeseek.com/) 的非官方客户端，这是它的 iOS 改版：修了 iPhone 上的问题，加了几个小功能。
 
 [![Release](https://img.shields.io/github/v/release/eddielee214/nodyssey-wa?include_prereleases&label=Release&color=2C6E7F)](https://github.com/eddielee214/nodyssey-wa/releases)
 [![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/eddielee214/nodyssey-wa/releases)
@@ -25,11 +25,11 @@
   </tr>
 </table>
 
-<sub>以上均为 iOS 模拟器实拍</sub>
+<sub>截图都在 iOS 模拟器里拍的</sub>
 
 </div>
 
-> 这是个人维护的改版，**不是原作者发布的版本**。改版的问题请在本仓库反馈，不要去打扰原作者。只做 iOS，安卓请直接用[原版](https://github.com/5151561/nodyssey)。
+> 这个改版**不是原作者发布的**，有问题请在本仓库提 issue，别去找原作者。只做 iOS，安卓请直接用[原版](https://github.com/5151561/nodyssey)。
 
 ## 下载与安装
 
@@ -70,8 +70,8 @@ ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装�
 
 ## 致谢
 
-- [5151561/nodyssey](https://github.com/5151561/nodyssey)：原项目，本改版的全部基础
-- [tyrad/nodeseek](https://github.com/tyrad/nodeseek)、[mrzhiin/seekmate](https://github.com/mrzhiin/seekmate)：原项目致谢的参考实现
+- [5151561/nodyssey](https://github.com/5151561/nodyssey)：原项目，本改版就是在它上面改的
+- [tyrad/nodeseek](https://github.com/tyrad/nodeseek)、[mrzhiin/seekmate](https://github.com/mrzhiin/seekmate)：原项目在致谢里列出的参考实现
 
 ## 说明
 
