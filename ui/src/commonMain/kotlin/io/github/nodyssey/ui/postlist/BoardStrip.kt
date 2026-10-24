@@ -885,8 +885,12 @@ internal const val FRONT_PAGE_KEY = "front"
 
 private val ToggleWidth = 32.dp
 
-/** Where the toggle stops short of the display edge. */
-private val ToggleEndInset = Spacing.sm
+/**
+ * Where the toggle stops short of the display edge: the same 12dp the pills start from on the left,
+ * and the same line 排序 and the account face end on above it. At 8dp the strip was the one row of
+ * the header whose two ends did not match.
+ */
+private val ToggleEndInset = Spacing.md
 
 private val ToggleIconSize = 18.dp
 

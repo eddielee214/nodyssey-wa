@@ -916,9 +916,11 @@ private fun HomeHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // The site button's own 8dp inset puts the wordmark on the 16dp margin; the account's
-                // 48dp target is drawn 6dp off the edge, which lands its 28dp face on the same 16dp.
-                .padding(start = Spacing.sm, end = AccountEndInset),
+                // The site button's own 8dp inset puts the wordmark on the 12dp margin the search pill
+                // starts on; the account's 48dp target is drawn 2dp off the edge, which lands its 28dp
+                // face on the same 12dp, flush with 排序 below it. At 16dp both sat 4dp inboard of the
+                // line under them and the header read as two blocks that did not quite stack.
+                .padding(start = Spacing.xs, end = AccountEndInset),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SiteSwitcher(account = account, modifier = Modifier.weight(1f))
@@ -1015,7 +1017,7 @@ private val AccountAvatarSize = 28.dp
 private val AccountAvatarShape = RoundedCornerShape(8.dp)
 
 /** Where the account's 48dp target stops short of the edge — see the header row that uses it. */
-private val AccountEndInset = 6.dp
+private val AccountEndInset = 2.dp
 
 /** Between the search pill and 排序. */
 private val HeaderControlGap = 6.dp
