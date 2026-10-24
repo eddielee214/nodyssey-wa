@@ -2,7 +2,7 @@
 
 # Nodyssey iOS 改版
 
-[Nodyssey](https://github.com/5151561/nodyssey) 是 [NodeSeek](https://www.nodeseek.com/) 的非官方客户端，这是它的 iOS 改版：修了 iPhone 上的问题，加了几个小功能。
+[Nodyssey](https://github.com/5151561/nodyssey) 是 [NodeSeek](https://www.nodeseek.com/) 的非官方客户端，这是它的 iOS 改版：修了 iPhone 上的问题，适配了 iPad，加了几个小功能。
 
 [![Release](https://img.shields.io/github/v/release/eddielee214/nodyssey-wa?include_prereleases&label=Release&color=2C6E7F)](https://github.com/eddielee214/nodyssey-wa/releases)
 [![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?logo=apple&logoColor=white)](https://github.com/eddielee214/nodyssey-wa/releases)
@@ -51,9 +51,12 @@ ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装�
 - 上传的图片插在光标处，不再加到正文最后
 - 编辑资料点保存后自动收起键盘，简介栏的回车键改为「完成」
 - IP 质量报告这类 SVG 图片显示成黑块
+- 私信对话页收不到新消息，要退出重进才看得到
+- 快速滑到顶部后继续下拉不会刷新，要等列表停稳再拉一次
 
 **新增**
 
+- 适配 iPad：横屏时左边列表、右边帖子，点列表直接换右边的内容；「我的」分两栏，顶栏和内容对齐。同一个 ipa，装在 iPhone 上还是原来的样子
 - 帖子和每层回复显示作者的注册天数、等级和风险提示
 - 首页热榜（实时 / 日榜 / 周榜，数据来自第三方 bimg.eu.org），按钮放在头像旁边
 - 切换 NodeSeek / DeepFlood 立即生效，不用重启 App
