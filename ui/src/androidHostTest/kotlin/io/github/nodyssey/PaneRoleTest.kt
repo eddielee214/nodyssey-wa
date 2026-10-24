@@ -2,6 +2,7 @@ package io.github.nodyssey
 
 import androidx.navigation3.runtime.NavKey
 import io.github.nodyssey.ui.login.WebViewGoal
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,5 +55,57 @@ class PaneRoleTest {
                 WebKey("https://example.test", "NodeSeek", WebViewGoal.MANAGE),
             )
         assertFalse(stack.showsListPane())
+    }
+
+    @Test
+    fun `the thread beside the feed has nothing to go back to`() {
+        val thread = PostDetailKey(1)
+        assertTrue(listOf(PostListKey, thread).sitsBesideList(thread))
+    }
+
+    /** It covers the first thread in the same half of the window, so it keeps its arrow. */
+    @Test
+    fun `a thread opened from that thread can go back to it`() {
+        val first = PostDetailKey(1)
+        val second = PostDetailKey(2)
+        val stack = listOf(PostListKey, first, second)
+        assertTrue(stack.sitsBesideList(first))
+        assertFalse(stack.sitsBesideList(second))
+    }
+
+    @Test
+    fun `a thread from reading history is not beside a list`() {
+        val thread = PostDetailKey(1)
+        assertFalse(listOf(ProfileKey, ReadHistoryKey, thread).sitsBesideList(thread))
+    }
+
+    @Test
+    fun `a row tapped beside an open thread replaces it`() {
+        val stack = mutableListOf<NavKey>(PostListKey, PostDetailKey(1), PostDetailKey(2))
+        stack.openFromList(PostListKey, PostDetailKey(3), expanded = true)
+        assertEquals(listOf<NavKey>(PostListKey, PostDetailKey(3)), stack)
+    }
+
+    @Test
+    fun `the row already open is left alone`() {
+        val open = PostDetailKey(1)
+        val stack = mutableListOf<NavKey>(PostListKey, open)
+        stack.openFromList(PostListKey, PostDetailKey(1), expanded = true)
+        assertTrue(stack.last() === open)
+    }
+
+    @Test
+    fun `on a narrow window a row is an ordinary push`() {
+        val stack = mutableListOf<NavKey>(PostListKey, PostDetailKey(1))
+        stack.openFromList(PostListKey, PostDetailKey(2), expanded = false)
+        assertEquals(listOf<NavKey>(PostListKey, PostDetailKey(1), PostDetailKey(2)), stack)
+    }
+
+    @Test
+    fun `a thread opened from the hot list sits beside it`() {
+        val thread = PostDetailKey(1)
+        val stack = listOf(PostListKey, HotListKey, thread)
+        assertTrue(stack.showsListPane())
+        assertTrue(stack.sitsBesideList(thread))
     }
 }

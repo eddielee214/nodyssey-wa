@@ -216,6 +216,7 @@ import io.github.plaza.designsys.component.PlazaFabHeight
 import io.github.plaza.designsys.component.PlazaIcons
 import io.github.plaza.designsys.component.PlazaSpinner
 import io.github.plaza.designsys.component.QuotePreview
+import io.github.plaza.designsys.component.ReadableTopBar
 import io.github.plaza.designsys.component.SkeletonBar
 import io.github.plaza.designsys.component.TonalTag
 import io.github.plaza.designsys.component.TonalTile
@@ -1028,103 +1029,106 @@ private fun DetailTopBar(
     val linkCopied = stringResource(Res.string.post_link_copied)
     val shareLabel = stringResource(Res.string.action_share)
 
-    TopAppBar(
-        title = {
-            // Clickable only while the bar is actually showing the title: the collapsed bar is where
-            // a reader deep in someone else's page 7 meets the title at all, and an invisible tap
-            // target over an empty bar is worse than no affordance.
-            val jump = onTitleClick?.takeIf { showTitle }
-            Text(
-                text = if (showTitle) title else "",
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = if (jump != null) {
-                    Modifier.clickable(onClick = jump).semantics {
-                        contentDescription = openOriginalPostLabel
-                    }
-                } else {
-                    Modifier
-                },
-            )
-        },
-        navigationIcon = {
-            if (showBackButton) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(Res.string.action_back),
-                        modifier = Modifier.size(TopBarIconSize),
-                    )
-                }
-            }
-        },
-        actions = {
-            IconButton(onClick = onOpenInBrowser) {
-                Icon(
-                    PlazaIcons.OpenInNew,
-                    contentDescription = stringResource(Res.string.action_open_in_browser),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(TopBarIconSize),
+    ReadableTopBar { barInsets ->
+        TopAppBar(
+            windowInsets = barInsets,
+            title = {
+                // Clickable only while the bar is actually showing the title: the collapsed bar is where
+                // a reader deep in someone else's page 7 meets the title at all, and an invisible tap
+                // target over an empty bar is worse than no affordance.
+                val jump = onTitleClick?.takeIf { showTitle }
+                Text(
+                    text = if (showTitle) title else "",
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = if (jump != null) {
+                        Modifier.clickable(onClick = jump).semantics {
+                            contentDescription = openOriginalPostLabel
+                        }
+                    } else {
+                        Modifier
+                    },
                 )
-            }
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
+            },
+            navigationIcon = {
+                if (showBackButton) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.action_back),
+                            modifier = Modifier.size(TopBarIconSize),
+                        )
+                    }
+                }
+            },
+            actions = {
+                IconButton(onClick = onOpenInBrowser) {
                     Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = stringResource(Res.string.action_more),
+                        PlazaIcons.OpenInNew,
+                        contentDescription = stringResource(Res.string.action_open_in_browser),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(TopBarIconSize),
                     )
                 }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    // The menu twin of pull-to-refresh, for the reader who is thirty floors down and
-                    // not about to scroll back up to pull.
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.action_refresh)) },
-                        onClick = {
-                            menuOpen = false
-                            onRefresh()
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.action_copy_link)) },
-                        onClick = {
-                            copy("post", postUrl, linkCopied)
-                            menuOpen = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(shareLabel) },
-                        onClick = {
-                            menuOpen = false
-                            shareText("$title\n$postUrl", shareLabel)
-                        },
-                    )
-                    tracked?.let { on ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(stringResource(if (on) Res.string.post_untrack_thread else Res.string.post_track_thread))
-                            },
-                            onClick = {
-                                menuOpen = false
-                                onToggleTrack()
-                            },
+                Box {
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(Res.string.action_more),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(TopBarIconSize),
                         )
                     }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        // The menu twin of pull-to-refresh, for the reader who is thirty floors down and
+                        // not about to scroll back up to pull.
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.action_refresh)) },
+                            onClick = {
+                                menuOpen = false
+                                onRefresh()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.action_copy_link)) },
+                            onClick = {
+                                copy("post", postUrl, linkCopied)
+                                menuOpen = false
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(shareLabel) },
+                            onClick = {
+                                menuOpen = false
+                                shareText("$title\n$postUrl", shareLabel)
+                            },
+                        )
+                        tracked?.let { on ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(stringResource(if (on) Res.string.post_untrack_thread else Res.string.post_track_thread))
+                                },
+                                onClick = {
+                                    menuOpen = false
+                                    onToggleTrack()
+                                },
+                            )
+                        }
+                    }
                 }
-            }
-        },
-        // Flush with the page: the bar is part of the grey the cards sit on, not a band of its own.
-        colors =
-        TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            scrolledContainerColor = MaterialTheme.colorScheme.background,
-        ),
-        // A step under Material's 64dp, as 2b draws it: the bar holds three icons and, once the title
-        // has scrolled away, one line of it. The buttons keep their 48dp targets.
-        expandedHeight = TopBarHeight,
-    )
+            },
+            // Flush with the page: the bar is part of the grey the cards sit on, not a band of its own.
+            colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background,
+            ),
+            // A step under Material's 64dp, as 2b draws it: the bar holds three icons and, once the title
+            // has scrolled away, one line of it. The buttons keep their 48dp targets.
+            expandedHeight = TopBarHeight,
+        )
+    }
 }
 
 private val TopBarHeight = 48.dp

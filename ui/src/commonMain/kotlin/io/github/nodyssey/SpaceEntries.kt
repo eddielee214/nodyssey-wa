@@ -46,11 +46,15 @@ internal fun EntryProviderScope<NavKey>.spaceEntries(nav: StackEntryScope) = wit
         UserSpaceRoute(
             viewModel = viewModel,
             onBack = { backStack.removeLastOrNull() },
-            onPostClick = { postId, floor -> backStack.add(PostDetailKey(postId, floor)) },
+            onPostClick = { postId, floor ->
+                backStack.openFromList(key, PostDetailKey(postId, floor), isListDetailExpanded())
+            },
             // The same conversation screen 私信 opens from the notification tab (board 7f).
             // It reads and writes this thread through the site's own message endpoints, so
             // there is nothing here the web view was needed for.
-            onMessage = { uid, name -> backStack.add(MessageThreadKey(uid, name)) },
+            onMessage = { uid, name ->
+                backStack.openFromList(key, MessageThreadKey(uid, name), isListDetailExpanded())
+            },
             // 空间页右上角的笔是「编辑资料」，直接进资料编辑页，不是账号设置的目录页。
             onEditProfile = { backStack.add(AccountProfileFieldsKey) },
             onOpenBrowser = openWebUrl,

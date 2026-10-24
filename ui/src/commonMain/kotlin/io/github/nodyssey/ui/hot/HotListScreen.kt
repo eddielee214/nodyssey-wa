@@ -1,6 +1,7 @@
 package io.github.nodyssey.ui.hot
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import io.github.nodyssey.data.hot.HotList
 import io.github.nodyssey.data.hot.HotListEntry
 import io.github.nodyssey.data.hot.HotListError
 import io.github.nodyssey.data.hot.HotListPeriod
+import io.github.nodyssey.ui.postlist.LocalSelectedPostId
 import io.github.nodyssey.ui.resources.Res
 import io.github.nodyssey.ui.resources.action_back
 import io.github.nodyssey.ui.resources.action_refresh
@@ -212,9 +214,12 @@ private fun HotListRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The thread open beside the list, on a window with room for both — as the feed marks its own.
+    val selected = LocalSelectedPostId.current == entry.postId
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),

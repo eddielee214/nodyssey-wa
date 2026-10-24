@@ -93,6 +93,7 @@ import io.github.plaza.designsys.component.InlineBanner
 import io.github.plaza.designsys.component.LayerCard
 import io.github.plaza.designsys.component.PlazaFieldDefaults
 import io.github.plaza.designsys.component.PlazaIcons
+import io.github.plaza.designsys.component.ReadableTopBar
 import io.github.plaza.designsys.theme.LocalPlazaLayers
 import io.github.plaza.designsys.theme.PlazaTheme
 import io.github.plaza.designsys.theme.Spacing
@@ -279,15 +280,18 @@ fun SignInScreen(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.action_close))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = LocalPlazaLayers.current.page),
-            )
+            ReadableTopBar { barInsets ->
+                TopAppBar(
+                    windowInsets = barInsets,
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.action_close))
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = LocalPlazaLayers.current.page),
+                )
+            }
         },
     ) { padding ->
         Column(

@@ -1,5 +1,6 @@
 package io.github.nodyssey
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -14,6 +15,7 @@ import io.github.nodyssey.ui.login.WebViewGoal
 import io.github.nodyssey.ui.messages.MessageThreadRoute
 import io.github.nodyssey.ui.messages.MessageThreadViewModel
 import io.github.nodyssey.ui.notifications.NotificationsRoute
+import io.github.nodyssey.ui.postlist.LocalSelectedPostId
 import io.github.nodyssey.ui.postlist.PostListRoute
 import io.github.nodyssey.ui.postlist.PostListViewModel
 import io.github.nodyssey.ui.profile.ProfileDestinations
@@ -33,63 +35,78 @@ import kotlinx.coroutines.launch
  * for the capture rules they all share.
  */
 internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = with(nav) {
-    entry<PostListKey> {
+    entry<PostListKey> { key ->
         val viewModel: PostListViewModel =
             viewModel(factory = PostListViewModel.factory(container))
-        PostListRoute(
-            viewModel = viewModel,
-            feedStates = homeFeedStates,
-            // The whole of what the row is already showing, not just the id: the thread
-            // draws these four before the network answers, and they are what the row's own
-            // title, avatar, name and board tag fly into.
-            onPostClick = { post ->
-                backStack.add(
-                    PostDetailKey(
-                        post.summary.postId,
-                        preview =
-                        ThreadPreview(
-                            title = post.summary.title,
-                            authorName = post.summary.authorName,
-                            avatarUrl = post.summary.avatarUrl,
-                            categoryTitle = post.summary.categoryTitle,
-                            categorySlug = post.summary.categorySlug,
-                            isAwarded = post.summary.isAwarded,
+        // Beside a thread, the row it was opened from stays marked, the way Mail marks the message
+        // it is showing. Read off the stack, which is what decides what the other pane shows.
+        val selectedPostId =
+            if (isListDetailExpanded()) (backStack.detailBeside(key) as? PostDetailKey)?.postId else null
+        CompositionLocalProvider(LocalSelectedPostId provides selectedPostId) {
+            PostListRoute(
+                viewModel = viewModel,
+                feedStates = homeFeedStates,
+                // The whole of what the row is already showing, not just the id: the thread
+                // draws these four before the network answers, and they are what the row's own
+                // title, avatar, name and board tag fly into.
+                onPostClick = { post ->
+                    backStack.openFromList(
+                        key,
+                        PostDetailKey(
+                            post.summary.postId,
+                            preview =
+                            ThreadPreview(
+                                title = post.summary.title,
+                                authorName = post.summary.authorName,
+                                avatarUrl = post.summary.avatarUrl,
+                                categoryTitle = post.summary.categoryTitle,
+                                categorySlug = post.summary.categorySlug,
+                                isAwarded = post.summary.isAwarded,
+                            ),
                         ),
-                    ),
-                )
-            },
-            onCreatePost = { backStack.add(PostComposerKey()) },
-            onSearch = { backStack.add(SearchKey()) },
-            onHotList = { backStack.add(HotListKey) },
-            onAccountClick = openProfileTab,
-            onSignIn = {
-                backStack.add(SignInKey)
-            },
-            onVerify = {
-                backStack.add(WebKey(it, siteTitle, WebViewGoal.CHALLENGE))
-            },
-            onNavigationBarHiddenChanged = { hidden ->
-                if (!isListDetailExpanded()) onTabBarHiddenByScroll(hidden)
-            },
-            reselectRequests = homeReselectRequests(),
-        )
+                        isListDetailExpanded(),
+                    )
+                },
+                onCreatePost = { backStack.add(PostComposerKey()) },
+                onSearch = { backStack.add(SearchKey()) },
+                onHotList = { backStack.add(HotListKey) },
+                onAccountClick = openProfileTab,
+                onSignIn = {
+                    backStack.add(SignInKey)
+                },
+                onVerify = {
+                    backStack.add(WebKey(it, siteTitle, WebViewGoal.CHALLENGE))
+                },
+                onNavigationBarHiddenChanged = { hidden ->
+                    if (!isListDetailExpanded()) onTabBarHiddenByScroll(hidden)
+                },
+                reselectRequests = homeReselectRequests(),
+            )
+        }
     }
 
-    entry<HotListKey> {
+    entry<HotListKey> { key ->
         val viewModel: HotListViewModel = viewModel(factory = HotListViewModel.factory(container))
-        HotListRoute(
-            viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
-            // What the row shows is what the thread can draw before its own fetch answers.
-            onPostClick = { entry ->
-                backStack.add(
-                    PostDetailKey(
-                        entry.postId,
-                        preview = ThreadPreview(title = entry.title, authorName = entry.authorName),
-                    ),
-                )
-            },
-        )
+        // Marked and replaced the way the feed's own rows are; see [PostListKey]'s entry.
+        val selectedPostId =
+            if (isListDetailExpanded()) (backStack.detailBeside(key) as? PostDetailKey)?.postId else null
+        CompositionLocalProvider(LocalSelectedPostId provides selectedPostId) {
+            HotListRoute(
+                viewModel = viewModel,
+                onBack = { backStack.removeLastOrNull() },
+                // What the row shows is what the thread can draw before its own fetch answers.
+                onPostClick = { entry ->
+                    backStack.openFromList(
+                        key,
+                        PostDetailKey(
+                            entry.postId,
+                            preview = ThreadPreview(title = entry.title, authorName = entry.authorName),
+                        ),
+                        isListDetailExpanded(),
+                    )
+                },
+            )
+        }
     }
 
     entry<SearchKey> { key ->
@@ -97,7 +114,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
             viewModel(factory = SearchViewModel.factory(container, initialQuery = key.query))
         SearchRoute(
             viewModel = viewModel,
-            onPostClick = { backStack.add(PostDetailKey(it)) },
+            onPostClick = { backStack.openFromList(key, PostDetailKey(it), isListDetailExpanded()) },
             // A user result now has a screen of its own, so it stays in the app. Finding
             // yourself in search must open the same self-shaped space 我的 opens.
             onUserClick = openSpace,
@@ -109,7 +126,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
         )
     }
 
-    entry<NotificationsKey> {
+    entry<NotificationsKey> { key ->
         // The settings flow's own default would flash the note on every launch before the stored
         // answer arrives; starting from "dismissed" errs towards not showing it.
         val oneHandTipDismissed by remember {
@@ -124,11 +141,11 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
             },
             onNotificationClick = { notification ->
                 notification.postId?.let {
-                    backStack.add(PostDetailKey(it, notification.floor))
+                    backStack.openFromList(key, PostDetailKey(it, notification.floor), isListDetailExpanded())
                 }
             },
             onOpenThread = { uid, name ->
-                backStack.add(MessageThreadKey(uid, name))
+                backStack.openFromList(key, MessageThreadKey(uid, name), isListDetailExpanded())
             },
             showOneHandTip = !oneHandTipDismissed,
             onDismissOneHandTip = { scope.launch { container.settingsRepository.dismissOneHandTip() } },
@@ -146,7 +163,7 @@ internal fun EntryProviderScope<NavKey>.tabRootEntries(nav: StackEntryScope) = w
             )
         MessageThreadRoute(
             viewModel = viewModel,
-            showBackButton = !(isListDetailExpanded() && backStack.showsListPane()),
+            showBackButton = !(isListDetailExpanded() && backStack.sitsBesideList(key)),
             onBack = { backStack.removeLastOrNull() },
             onSignIn = { backStack.add(SignInKey) },
             onVerify = { url ->
