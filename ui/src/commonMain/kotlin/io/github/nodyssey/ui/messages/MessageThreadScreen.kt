@@ -91,6 +91,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.core.NodeSeekStickers
@@ -188,6 +189,12 @@ fun MessageThreadRoute(
     onLinkClick: (String) -> Unit = onOpenBrowser,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    // Asks for new messages only while the conversation is actually in front: a pushed screen on top,
+    // the app in the background or the screen gone all pause it.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.startPolling()
+        onPauseOrDispose { viewModel.stopPolling() }
+    }
     MessageThreadScreen(
         state = state,
         draftState = viewModel.draftState,

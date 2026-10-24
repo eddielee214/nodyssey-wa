@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.data.DirectMessage
 import io.github.nodyssey.data.MessageConversation
+import io.github.nodyssey.data.MessageThread
 import io.github.nodyssey.data.MessageRepository
 import io.github.nodyssey.data.NotificationCategory
 import io.github.nodyssey.data.NotificationRepository
@@ -38,6 +39,7 @@ import io.github.plaza.designsys.editor.insertBlockAtCaret
 import io.github.plaza.designsys.editor.removeBlock
 import io.github.plaza.designsys.editor.toolbarLayout
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,6 +93,7 @@ class MessageThreadViewModel(
      */
     private val uploads = ImageUploadQueue(viewModelScope, uploader)
     private var loadJob: Job? = null
+    private var pollJob: Job? = null
     private var pendingSeed = 0L
 
     init {
@@ -156,26 +159,7 @@ class MessageThreadViewModel(
                 _uiState.update { it.copy(isLoading = true, error = null) }
                 runCatchingExceptCancellation { repository.thread(_uiState.value.uid) }
                     .onSuccess { thread ->
-                        val now = clock.nowMillis()
-                        val threadJoinedDays = joinedDays(thread.createdAt, now)
-                        val resolvedName = thread.userName.ifBlank { _uiState.value.userName }
-                        _uiState.update { state ->
-                            state.copy(
-                                // The server list replaces the delivered history but must not drop a
-                                // bubble that is still in flight or waiting to be retried.
-                                messages =
-                                thread.messages.map(::delivered) +
-                                    state.messages.filter { it.status != SendStatus.SENT },
-                                userName = resolvedName,
-                                avatarUrl = thread.avatarUrl ?: state.avatarUrl,
-                                level = thread.level ?: state.level,
-                                joinedDays = threadJoinedDays ?: state.joinedDays,
-                                isLoading = false,
-                                error = null,
-                                nowMillis = now,
-                            )
-                        }
-                        markRead(thread.unreadIds)
+                        val resolvedName = apply(thread)
                         val current = _uiState.value
                         if (
                             profiles != null &&
@@ -200,6 +184,63 @@ class MessageThreadViewModel(
                         }
                     }
             }
+    }
+
+    /**
+     * Fetches the thread again while it is on screen, so a reply from the other side shows up without
+     * leaving and coming back — before this the history was read once, when the screen opened.
+     *
+     * The site pushes nothing, so this asks: once as soon as the screen is back in front (the app
+     * returning from the background is the common case), then every [POLL_INTERVAL_MILLIS] until
+     * [stopPolling]. Quietly — no spinner, no error banner over a conversation that is already
+     * readable — and never on top of a [refresh] still in flight.
+     */
+    fun startPolling() {
+        if (pollJob?.isActive == true) return
+        pollJob =
+            viewModelScope.launch {
+                while (true) {
+                    if (loadJob?.isActive != true && session.state.value.isSignedIn && !isSending()) {
+                        runCatchingExceptCancellation { repository.thread(_uiState.value.uid) }
+                            // Checked again on the way back: a history fetched while a send was
+                            // landing can already hold that message, next to its own 发送中 bubble.
+                            .onSuccess { thread -> if (!isSending()) apply(thread) }
+                    }
+                    delay(POLL_INTERVAL_MILLIS)
+                }
+            }
+    }
+
+    private fun isSending() = _uiState.value.messages.any { it.status == SendStatus.SENDING }
+
+    fun stopPolling() {
+        pollJob?.cancel()
+        pollJob = null
+    }
+
+    /** Lays a fetched thread over the state; returns the name the conversation resolved to. */
+    private fun apply(thread: MessageThread): String {
+        val now = clock.nowMillis()
+        val threadJoinedDays = joinedDays(thread.createdAt, now)
+        val resolvedName = thread.userName.ifBlank { _uiState.value.userName }
+        _uiState.update { state ->
+            state.copy(
+                // The server list replaces the delivered history but must not drop a
+                // bubble that is still in flight or waiting to be retried.
+                messages =
+                thread.messages.map(::delivered) +
+                    state.messages.filter { it.status != SendStatus.SENT },
+                userName = resolvedName,
+                avatarUrl = thread.avatarUrl ?: state.avatarUrl,
+                level = thread.level ?: state.level,
+                joinedDays = threadJoinedDays ?: state.joinedDays,
+                isLoading = false,
+                error = null,
+                nowMillis = now,
+            )
+        }
+        markRead(thread.unreadIds)
+        return resolvedName
     }
 
     /**
@@ -354,6 +395,9 @@ class MessageThreadViewModel(
             }
     }
 }
+
+/** Often enough to read as a conversation, rarely enough not to look like a scraper to the site. */
+private const val POLL_INTERVAL_MILLIS = 10_000L
 
 enum class SendStatus {
     SENT,

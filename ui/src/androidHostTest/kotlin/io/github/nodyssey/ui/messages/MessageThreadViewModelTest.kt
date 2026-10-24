@@ -19,8 +19,11 @@ import io.github.plaza.core.net.SiteException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -150,6 +153,46 @@ class MessageThreadViewModelTest {
             assertTrue(messages.any { it.status == SendStatus.FAILED && it.content == "在吗" })
         }
 
+    /** Bug: the history was read once, so a reply only showed up after leaving and coming back. */
+    @Test
+    fun `a reply from the other side shows up while the conversation is open`() =
+        runTest(dispatcher) {
+            val repository = FakeMessageRepository()
+            val viewModel = viewModel(repository)
+            advanceUntilIdle()
+            viewModel.startPolling()
+            runCurrent()
+
+            repository.incoming += reply("2", "刚问完，可以改")
+            advanceTimeBy(POLL_WAIT)
+            assertEquals("刚问完，可以改", viewModel.uiState.value.messages.last().content)
+
+            // Paused — the screen covered or the app in the background — it stops asking.
+            viewModel.stopPolling()
+            repository.incoming += reply("3", "改好了")
+            advanceTimeBy(POLL_WAIT)
+            assertEquals(2, viewModel.uiState.value.messages.size)
+        }
+
+    /** A history fetched mid-send can already hold the message, beside its own 发送中 bubble. */
+    @Test
+    fun `polling does not show a message twice while it is being sent`() =
+        runTest(dispatcher) {
+            val repository = FakeMessageRepository(sendDelayMillis = 30_000)
+            val viewModel = viewModel(repository)
+            advanceUntilIdle()
+            viewModel.startPolling()
+            runCurrent()
+
+            viewModel.draftState.setTextAndPlaceCursorAtEnd("好的")
+            viewModel.send()
+            repository.incoming += DirectMessage(id = "2", isMine = true, content = "好的", isMarkdown = true, sentAtMillis = null, sentAtText = null)
+            advanceTimeBy(POLL_WAIT)
+            assertEquals(1, viewModel.uiState.value.messages.count { it.content == "好的" })
+
+            viewModel.stopPolling()
+        }
+
     /**
      * Bug: fetching a conversation is not what clears it — the ids have to go back — so the 私信
      * badge survived reading the message that put it there.
@@ -252,8 +295,16 @@ class MessageThreadViewModelTest {
         profiles = profiles,
     )
 
+    private fun reply(
+        id: String,
+        content: String,
+    ) = DirectMessage(id = id, isMine = false, content = content, isMarkdown = true, sentAtMillis = NOW, sentAtText = null)
+
     private companion object {
         const val NOW = 1_785_000_000_000L
+
+        /** Just past one poll interval. */
+        const val POLL_WAIT = 10_001L
     }
 }
 
@@ -270,7 +321,10 @@ private class FakeMessageRepository(
     var sendError: Throwable? = null,
     private val unreadIds: List<Long> = emptyList(),
     private val level: Int? = 4,
+    private val sendDelayMillis: Long = 0,
 ) : MessageRepository {
+    /** Messages that arrive after the conversation was opened, appended to every later fetch. */
+    val incoming = mutableListOf<DirectMessage>()
     var sendCount = 0
     var lastContent: String? = null
     val markedRead = mutableListOf<Long>()
@@ -299,7 +353,7 @@ private class FakeMessageRepository(
                     sentAtMillis = 1_784_999_000_000L,
                     sentAtText = null,
                 ),
-            ),
+            ) + incoming,
             unreadIds = unreadIds,
         )
 
@@ -310,6 +364,7 @@ private class FakeMessageRepository(
     ): DirectMessage? {
         sendCount++
         lastContent = content
+        delay(sendDelayMillis)
         sendError?.let { throw it }
         return DirectMessage(
             id = "sent-$sendCount",
