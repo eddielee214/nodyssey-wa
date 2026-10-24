@@ -11,8 +11,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.nodyssey.core.NodeSeekSite
 import io.github.nodyssey.data.DirectMessage
 import io.github.nodyssey.data.MessageConversation
-import io.github.nodyssey.data.MessageThread
 import io.github.nodyssey.data.MessageRepository
+import io.github.nodyssey.data.MessageThread
 import io.github.nodyssey.data.NotificationCategory
 import io.github.nodyssey.data.NotificationRepository
 import io.github.nodyssey.data.ProfileRepository
