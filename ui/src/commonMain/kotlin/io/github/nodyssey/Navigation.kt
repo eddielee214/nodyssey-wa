@@ -819,6 +819,10 @@ internal fun paneRoleOf(key: NavKey?): PaneRole? =
         // opened from the feed does, rather than taking the whole window.
         HotListKey -> PaneRole.LIST
 
+        // 我的's own lists of threads: what was written, commented on, kept and read. Each is a list
+        // of things to open, so a thread opened from one sits beside it rather than taking the window.
+        MyTopicsKey, MyCommentsKey, BookmarksKey, ReadHistoryKey -> PaneRole.LIST
+
         is SearchKey -> PaneRole.LIST
 
         // A user's space is a list wherever it is reached from — including on top of a thread, where
@@ -835,7 +839,7 @@ internal fun paneRoleOf(key: NavKey?): PaneRole? =
  *
  * Mirrors [ListDetailSceneStrategy.calculateScene]: a scene is built from the run of pane-carrying
  * entries at the top of the stack, and that run ends at the first entry carrying no pane role. So a
- * thread opened from 浏览历史 is full-screen and keeps its back arrow — 浏览历史 is not a pane — while
+ * thread opened from 追踪的帖子 is full-screen and keeps its back arrow — that page is not a pane — while
  * the same thread opened from the feed, from search or from a user's space does not.
  *
  * Only meaningful once the window is wide enough for two panes; every caller checks that first.
@@ -936,7 +940,7 @@ private fun paneMetadataOf(key: NavKey, destination: TopLevelDestination): Map<S
 /** What the detail half says on a wide window before anything has been opened in it. */
 internal fun emptyDetailTextOf(key: NavKey): StringResource =
     when (key) {
-        PostListKey, HotListKey -> Res.string.home_pane_empty
+        PostListKey, HotListKey, MyTopicsKey, MyCommentsKey, BookmarksKey, ReadHistoryKey -> Res.string.home_pane_empty
         is SearchKey -> Res.string.search_pane_empty
         NotificationsKey -> Res.string.notifications_pane_empty
         is UserSpaceKey -> Res.string.space_pane_empty

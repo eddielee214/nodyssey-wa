@@ -64,13 +64,13 @@ internal fun EntryProviderScope<NavKey>.spaceEntries(nav: StackEntryScope) = wit
         )
     }
 
-    entry<BookmarksKey> {
+    entry<BookmarksKey> { key ->
         val viewModel: BookmarksViewModel =
             viewModel(factory = BookmarksViewModel.factory(container))
         BookmarksRoute(
             viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
-            onPostClick = { postId -> backStack.add(PostDetailKey(postId)) },
+            onBack = { backStack.closeList(key) },
+            onPostClick = { postId -> backStack.openFromList(key, PostDetailKey(postId), isListDetailExpanded()) },
             onOpenBrowser = openWebUrl,
             onSignIn = { backStack.add(SignInKey) },
             onVerify = { url ->
@@ -79,23 +79,23 @@ internal fun EntryProviderScope<NavKey>.spaceEntries(nav: StackEntryScope) = wit
         )
     }
 
-    entry<ReadHistoryKey> {
+    entry<ReadHistoryKey> { key ->
         val viewModel: ReadHistoryViewModel =
             viewModel(factory = ReadHistoryViewModel.factory(container))
         ReadHistoryRoute(
             viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
-            onPostClick = { postId -> backStack.add(PostDetailKey(postId)) },
+            onBack = { backStack.closeList(key) },
+            onPostClick = { postId -> backStack.openFromList(key, PostDetailKey(postId), isListDetailExpanded()) },
         )
     }
 
-    entry<MyTopicsKey> {
+    entry<MyTopicsKey> { key ->
         val viewModel: MyTopicsViewModel =
             viewModel(factory = MyTopicsViewModel.factory(container))
         MyTopicsRoute(
             viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
-            onPostClick = { postId -> backStack.add(PostDetailKey(postId)) },
+            onBack = { backStack.closeList(key) },
+            onPostClick = { postId -> backStack.openFromList(key, PostDetailKey(postId), isListDetailExpanded()) },
             onBrowseFeed = openHomeTab,
             // `/space` needs the session's cookies, so a wall here is cleared in the app's own web
             // view rather than in the cookie-less system browser.
@@ -105,14 +105,16 @@ internal fun EntryProviderScope<NavKey>.spaceEntries(nav: StackEntryScope) = wit
         )
     }
 
-    entry<MyCommentsKey> {
+    entry<MyCommentsKey> { key ->
         val viewModel: MyCommentsViewModel =
             viewModel(factory = MyCommentsViewModel.factory(container))
         MyCommentsRoute(
             viewModel = viewModel,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = { backStack.closeList(key) },
             // The floor rides along, so the thread opens on the comment rather than at its top.
-            onCommentClick = { postId, floor -> backStack.add(PostDetailKey(postId, floor)) },
+            onCommentClick = { postId, floor ->
+                backStack.openFromList(key, PostDetailKey(postId, floor), isListDetailExpanded())
+            },
             onBrowseFeed = openHomeTab,
             onOpenBrowser = { backStack.add(WebKey(NodeSeekSite.BASE_URL, siteTitle, WebViewGoal.CHALLENGE)) },
             onSignIn = { backStack.add(SignInKey) },

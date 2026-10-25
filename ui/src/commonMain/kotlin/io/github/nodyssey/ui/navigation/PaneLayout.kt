@@ -9,7 +9,7 @@ package io.github.nodyssey.ui.navigation
  * details.
  *
  * The grouping follows the scene strategy's: a list takes the run of details directly above it, and
- * anything that is neither ends the run. A thread opened from 浏览历史 is therefore full-screen, the
+ * anything that is neither ends the run. A thread opened from 追踪的帖子 is therefore full-screen, the
  * same thread opened from the feed is beside it, and a user's space opened from that thread starts a
  * pair of its own on top.
  *

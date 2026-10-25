@@ -37,12 +37,12 @@ class PaneRoleTest {
     }
 
     /**
-     * 浏览历史 carries no pane metadata, so the scene strategy stops there and hands the whole window
+     * 追踪的帖子 carries no pane metadata, so the scene strategy stops there and hands the whole window
      * to the thread. Answering otherwise would take away the only way back out of it.
      */
     @Test
-    fun `a thread opened from reading history is full-screen`() {
-        val stack = listOf<NavKey>(ProfileKey, ReadHistoryKey, PostDetailKey(1))
+    fun `a thread opened from tracked threads is full-screen`() {
+        val stack = listOf<NavKey>(ProfileKey, TrackedThreadsKey, PostDetailKey(1))
         assertFalse(stack.showsListPane())
     }
 
@@ -74,9 +74,9 @@ class PaneRoleTest {
     }
 
     @Test
-    fun `a thread from reading history is not beside a list`() {
+    fun `a thread from tracked threads is not beside a list`() {
         val thread = PostDetailKey(1)
-        assertFalse(listOf(ProfileKey, ReadHistoryKey, thread).sitsBesideList(thread))
+        assertFalse(listOf(ProfileKey, TrackedThreadsKey, thread).sitsBesideList(thread))
     }
 
     @Test
@@ -122,5 +122,13 @@ class PaneRoleTest {
         val stack = mutableListOf<NavKey>(PostListKey, HotListKey)
         stack.closeList(HotListKey)
         assertEquals(listOf<NavKey>(PostListKey), stack)
+    }
+
+    @Test
+    fun `my own lists of threads sit beside what they open`() {
+        listOf(MyTopicsKey, MyCommentsKey, BookmarksKey, ReadHistoryKey).forEach { list ->
+            val thread = PostDetailKey(1)
+            assertTrue(listOf(ProfileKey, list, thread).sitsBesideList(thread))
+        }
     }
 }
