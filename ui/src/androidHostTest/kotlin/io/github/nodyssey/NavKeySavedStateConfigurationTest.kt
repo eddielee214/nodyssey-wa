@@ -158,6 +158,7 @@ private val EVERY_KEY: List<NavKey> =
         AccountPreferencesKey,
         FollowKey(showFollowers = true),
         BookmarksKey,
+        HotListKey,
         ReadHistoryKey,
         CreditKey,
         StardustKey,
