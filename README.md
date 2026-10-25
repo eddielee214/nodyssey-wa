@@ -31,12 +31,12 @@
     <td align="center"><img src="docs/screenshots/ipad-hot.png" width="400" alt="iPad 热榜：左边热榜，右边帖子" /></td>
   </tr>
   <tr>
-    <td align="center"><b>iPad</b> 双栏：列表 + 帖子，当前帖子在列表中高亮</td>
+    <td align="center"><b>iPad</b> 横屏双栏：列表 + 帖子，当前帖子在列表中高亮</td>
     <td align="center"><b>iPad</b> 热榜同样以双栏打开</td>
   </tr>
 </table>
 
-<sub>截图来自 iOS 模拟器，iPad 为 13 英寸 iPad Pro 竖屏（宽 1032pt，与横屏一样显示双栏）</sub>
+<sub>截图来自 iOS 模拟器，iPad 为 13 英寸 iPad Pro 横屏</sub>
 
 </div>
 
