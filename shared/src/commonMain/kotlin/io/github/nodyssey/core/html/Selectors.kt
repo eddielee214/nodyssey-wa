@@ -139,6 +139,13 @@ object Selectors {
     val LOGIN_REQUIRED_MARKERS = listOf("需要注册用户才能查看", "权限不足", "Wrong category")
 
     /**
+     * What members wrote, which can quote any of the refusals above without being one; see
+     * [io.github.plaza.core.net.PageMarkers.userContentSelectors]. The real refusals are bare text in
+     * the page frame, outside all of these.
+     */
+    val USER_CONTENT = listOf(LIST_ITEM, DETAIL_TITLE, DETAIL_TITLE_FALLBACK, CONTENT_ARTICLE, CONTENT_SIGNATURE)
+
+    /**
      * 阅读权限 refused: 「查看本帖需要Lv5，您的权限不足😑，请赚取🍗升级您的用户等级」.
      *
      * Checked before [LOGIN_REQUIRED_MARKERS] — see [io.github.plaza.core.net.PageMarkers.levelRequired]

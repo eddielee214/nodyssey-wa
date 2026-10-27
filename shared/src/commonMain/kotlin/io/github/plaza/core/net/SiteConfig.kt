@@ -105,6 +105,15 @@ data class PageMarkers(
     /** The site's own wording for "this needs an account". */
     val loginRequired: List<String>,
     /**
+     * Where a page carries what its members wrote: list rows, thread titles, posts, signatures.
+     *
+     * The refusal wording above is only the site's when the site is the one saying it. A thread
+     * titled 「…权限不足…」 on the front page is a member quoting it, and read as a refusal it turned
+     * every signed-in page that listed it into a sign-in wall. [ChallengeDetector] drops these regions
+     * before it looks; scripts, styles and form fields it drops on its own.
+     */
+    val userContentSelectors: List<String> = emptyList(),
+    /**
      * The site's own wording for "your level is too low", consulted *before* [loginRequired].
      *
      * Order is the point: a forum that words both refusals as some flavour of 权限不足 would otherwise

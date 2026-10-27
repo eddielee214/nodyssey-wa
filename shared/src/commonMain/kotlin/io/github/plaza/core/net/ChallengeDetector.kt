@@ -1,5 +1,7 @@
 package io.github.plaza.core.net
 
+import com.fleeksoft.ksoup.Ksoup
+
 /**
  * A scraped forum sits behind Cloudflare, and some of its boards require a signed-in account. Both
  * failures come back as a 200-with-HTML rather than a useful status code, so the body has to be
@@ -18,18 +20,30 @@ class ChallengeDetector(private val markers: PageMarkers) {
      * [SiteError.Cloudflare].
      */
     fun detect(html: String, statusCode: Int, headers: Map<String, String>, url: String): SiteError? {
+        // The refusals are read from what the site itself says on the page, not from the raw body.
+        // A member's thread title, a quoted error, a signature or a script string can all carry
+        // 权限不足; matched against the raw body, one such title on the front page made every
+        // signed-in screen that loads it report an unrecognised session (2026-10-27). Parsed only when
+        // a phrase is there at all, so an ordinary page costs nothing extra; the Cloudflare markers
+        // below stay on the raw body, since those are scripts.
+        val refusalCandidate =
+            markers.levelRequired.any { it.containsMatchIn(html) } ||
+                markers.privatePost.any { html.contains(it) } ||
+                markers.loginRequired.any { html.contains(it) }
+        val siteText = if (refusalCandidate) siteText(html) else ""
+
         // Before the login markers, not after: see [PageMarkers.levelRequired] — the two refusals
         // can share a phrase, and only the more specific one carries a level to show.
-        markers.levelRequired.firstNotNullOfOrNull { it.find(html) }?.let { match ->
+        markers.levelRequired.firstNotNullOfOrNull { it.find(siteText) }?.let { match ->
             return SiteError.LevelRequired(match.groupValues.getOrNull(1)?.toIntOrNull())
         }
 
         // Beside the level wall and for the same reason: the page it arrives on is an ordinary
         // signed-in frame carrying `id="nsk-body"`, so anything checked after [markers.usablePage]
         // would never see it. Its 404 is invisible for the same reason.
-        if (markers.privatePost.any { html.contains(it) }) return SiteError.PrivatePost
+        if (markers.privatePost.any { siteText.contains(it) }) return SiteError.PrivatePost
 
-        if (markers.loginRequired.any { html.contains(it) }) return SiteError.LoginRequired
+        if (markers.loginRequired.any { siteText.contains(it) }) return SiteError.LoginRequired
 
         // A normal page from a Cloudflare-fronted site also carries `Server: cloudflare`, so only an
         // explicit challenge signal counts — and real content always wins over a false positive.
@@ -49,5 +63,13 @@ class ChallengeDetector(private val markers: PageMarkers) {
         if (statusCode !in 200..299) return SiteError.Http(statusCode)
 
         return SiteError.Unparsable
+    }
+
+    /** The page's visible text with members' writing, scripts and form fields taken out. */
+    private fun siteText(html: String): String {
+        val document = Ksoup.parse(html)
+        document.select("head, script, style, template, textarea").remove()
+        markers.userContentSelectors.forEach { document.select(it).remove() }
+        return document.body().text()
     }
 }
