@@ -26,6 +26,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.plaza.designsys.theme.Spacing
 
@@ -34,12 +35,16 @@ import io.github.plaza.designsys.theme.Spacing
  * corners, square at the seams. See [GroupedListItem] and [groupSlice], which are the only things
  * that should need it.
  */
-fun groupShape(first: Boolean, last: Boolean): Shape =
+fun groupShape(
+    first: Boolean,
+    last: Boolean,
+    radius: Dp = GROUP_OUTER_RADIUS,
+): Shape =
     RoundedCornerShape(
-        topStart = if (first) GROUP_OUTER_RADIUS else GROUP_SEAM_RADIUS,
-        topEnd = if (first) GROUP_OUTER_RADIUS else GROUP_SEAM_RADIUS,
-        bottomEnd = if (last) GROUP_OUTER_RADIUS else GROUP_SEAM_RADIUS,
-        bottomStart = if (last) GROUP_OUTER_RADIUS else GROUP_SEAM_RADIUS,
+        topStart = if (first) radius else GROUP_SEAM_RADIUS,
+        topEnd = if (first) radius else GROUP_SEAM_RADIUS,
+        bottomEnd = if (last) radius else GROUP_SEAM_RADIUS,
+        bottomStart = if (last) radius else GROUP_SEAM_RADIUS,
     )
 
 private val GROUP_OUTER_RADIUS = LayerCardRadius

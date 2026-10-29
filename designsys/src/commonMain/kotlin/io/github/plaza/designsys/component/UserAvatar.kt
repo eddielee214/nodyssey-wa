@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import io.github.plaza.designsys.theme.styledShape
 
 /**
  * The avatar shape: a squircle-ish rounded square at 31% — 10dp on a 32dp list avatar, 14dp on the
@@ -31,7 +33,11 @@ import coil3.compose.AsyncImage
  * read as a hard-edged block beside the 24dp card corners around it. A percentage rather than a Dp
  * so the corner keeps its proportion from a comment row's avatar up to a space page's.
  */
-val AvatarShape: Shape = RoundedCornerShape(percent = 31)
+val AvatarShape: Shape
+    @Composable @ReadOnlyComposable
+    get() = styledShape(AvatarSquircle)
+
+private val AvatarSquircle = RoundedCornerShape(percent = 31)
 
 /**
  * An account with no uploaded picture is still served an image — a cartoon the site generates from

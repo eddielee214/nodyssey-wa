@@ -1901,4 +1901,17 @@
     <string name="hot_error_network">连不上 bimg.eu.org，检查网络或代理后重试。</string>
     <string name="hot_error_unavailable">热榜服务暂时不可用，稍后再试。</string>
     <!-- hot:end -->
+    <string name="settings_ui_style">界面风格</string>
+    <string name="settings_ui_style_hint">换的是整套视觉语言：配色、层次、圆角和字体一起变</string>
+    <string name="settings_ui_style_own_palette">当前风格使用自带配色，下面的配色设置在切回「轻盈层叠」后生效</string>
+    <string name="ui_style_layered">轻盈层叠</string>
+    <string name="ui_style_layered_desc">灰底白卡 · 柔和阴影</string>
+    <string name="ui_style_editorial">纸刊</string>
+    <string name="ui_style_editorial_desc">暖白纸面 · 细线 · 衬线标题</string>
+    <string name="ui_style_industrial">工业</string>
+    <string name="ui_style_industrial_desc">直角 · 粗墨线 · 仅浅色</string>
+    <string name="ui_style_terminal">终端</string>
+    <string name="ui_style_terminal_desc">黑底等宽 · 网格线 · 仅深色</string>
+    <string name="ui_style_preview_title">帖子标题示例</string>
+    <string name="ui_style_preview_meta">作者 · 3 分钟前</string>
 </resources>

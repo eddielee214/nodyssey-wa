@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,9 +19,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.plaza.designsys.theme.styledCorner
 
 /** A tile's corners unless it says otherwise: 14dp, the Lean round's step down from 20. */
-private val TonalTileShape: Shape = RoundedCornerShape(14.dp)
+private val TonalTileShape: Shape
+    @Composable @ReadOnlyComposable
+    get() = RoundedCornerShape(styledCorner(14.dp))
 
 /**
  * A tonal block tapped as a whole — a balance, a mark, a choice, a page key — with its content

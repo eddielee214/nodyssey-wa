@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -53,6 +54,7 @@ import io.github.nodyssey.data.settings.ColorSource
 import io.github.nodyssey.data.settings.PaletteStyle
 import io.github.nodyssey.data.settings.SavedTheme
 import io.github.nodyssey.data.settings.SettingsRepository
+import io.github.nodyssey.data.settings.UiStyle
 import io.github.nodyssey.data.settings.UserSettings
 import io.github.nodyssey.ui.common.longPressToEdit
 import io.github.nodyssey.ui.resources.Res
@@ -73,6 +75,7 @@ import io.github.nodyssey.ui.resources.settings_seed_edit
 import io.github.nodyssey.ui.resources.settings_seed_name
 import io.github.nodyssey.ui.resources.settings_theme
 import io.github.nodyssey.ui.resources.settings_theme_preview
+import io.github.nodyssey.ui.resources.settings_ui_style_own_palette
 import io.github.nodyssey.ui.settings.SettingsGroup
 import io.github.nodyssey.ui.settings.SettingsItemGap
 import io.github.nodyssey.ui.settings.SettingsMenuRow
@@ -103,6 +106,7 @@ fun ThemeSettingsRoute(
         onPresetSelected = viewModel::selectPreset,
         onCustomSeedSelected = viewModel::selectCustomSeed,
         onPaletteStyleChange = viewModel::setPaletteStyle,
+        onUiStyleChange = viewModel::setUiStyle,
         onSaveTheme = viewModel::saveTheme,
         onDeleteTheme = viewModel::deleteTheme,
         onWallpaperSeedSelected = viewModel::selectWallpaperSeed,
@@ -140,6 +144,7 @@ fun ThemeSettingsScreen(
     onWallpaperSeedSelected: (Int) -> Unit = {},
     onWallpaperSystemPaletteChange: (Boolean) -> Unit = {},
     onWallpaperAutoUpdateChange: (Boolean) -> Unit = {},
+    onUiStyleChange: (UiStyle) -> Unit = {},
 ) {
     // Which way into the colour sheet: 新建 starts a theme from nothing, so it opens with no name —
     // prefilled with the theme in use, saving under a new colour made a second theme of the same
@@ -175,49 +180,70 @@ fun ThemeSettingsScreen(
                 .padding(SettingsPagePadding),
             verticalArrangement = Arrangement.spacedBy(SettingsItemGap),
         ) {
+            // First, because it decides more than everything under it: three of the four styles
+            // bring their own colours, and then the colour settings below wait for 轻盈层叠.
             SettingsGroup {
-                ColorSourceHeader(settings = settings, onSelect = onColorSourceChange)
-                when (settings.colorSource) {
-                    ColorSource.PRESET ->
-                        PresetGrid(
-                            selected = settings.presetId,
-                            onSelect = onPresetSelected,
-                            modifier = Modifier.padding(start = Spacing.xs, end = Spacing.xs, bottom = Spacing.sm),
-                        )
-
-                    ColorSource.WALLPAPER ->
-                        DynamicColorContent(
-                            settings = settings,
-                            onSeedSelected = onWallpaperSeedSelected,
-                            onSystemPaletteChange = onWallpaperSystemPaletteChange,
-                            onAutoUpdateChange = onWallpaperAutoUpdateChange,
-                        )
-
-                    ColorSource.CUSTOM ->
-                        CustomSeedRow(
-                            settings = settings,
-                            onEdit = { sheet = SeedSheetMode.EDIT },
-                        )
-                }
+                UiStyleBlock(selected = settings.uiStyle, onSelect = onUiStyleChange)
             }
+            val ownPalette = settings.uiStyle.toPlaza().ownsPalette
+            if (ownPalette) {
+                Text(
+                    stringResource(Res.string.settings_ui_style_own_palette),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = Spacing.lg),
+                )
+            }
+            // Dimmed rather than hidden: these are still the reader's answers, kept for when they
+            // come back to 轻盈层叠, and a page that lost two cards would read as settings gone.
+            Column(
+                modifier = Modifier.alpha(if (ownPalette) DIMMED_ALPHA else 1f),
+                verticalArrangement = Arrangement.spacedBy(SettingsItemGap),
+            ) {
+                SettingsGroup {
+                    ColorSourceHeader(settings = settings, onSelect = onColorSourceChange)
+                    when (settings.colorSource) {
+                        ColorSource.PRESET ->
+                            PresetGrid(
+                                selected = settings.presetId,
+                                onSelect = onPresetSelected,
+                                modifier = Modifier.padding(start = Spacing.xs, end = Spacing.xs, bottom = Spacing.sm),
+                            )
 
-            SettingsGroup {
-                MyThemesBlock(
-                    themes = settings.savedThemes,
-                    selected = settings.seedColor.takeIf { settings.colorSource == ColorSource.CUSTOM },
-                    onSelect = onCustomSeedSelected,
-                    onRename = { renaming = it },
-                    onDelete = onDeleteTheme,
-                    onCreate = { sheet = SeedSheetMode.NEW },
-                )
-                // 色彩风格 steers the generator, and a 角色预设 never reaches it. Greyed rather than
-                // hidden: it is still the answer for every other way of getting a colour, and a row
-                // that vanished would read as one the app had lost.
-                PaletteStyleRow(
-                    selected = settings.paletteStyle,
-                    onSelect = onPaletteStyleChange,
-                    enabled = activeCharacterPalette(settings) == null,
-                )
+                        ColorSource.WALLPAPER ->
+                            DynamicColorContent(
+                                settings = settings,
+                                onSeedSelected = onWallpaperSeedSelected,
+                                onSystemPaletteChange = onWallpaperSystemPaletteChange,
+                                onAutoUpdateChange = onWallpaperAutoUpdateChange,
+                            )
+
+                        ColorSource.CUSTOM ->
+                            CustomSeedRow(
+                                settings = settings,
+                                onEdit = { sheet = SeedSheetMode.EDIT },
+                            )
+                    }
+                }
+
+                SettingsGroup {
+                    MyThemesBlock(
+                        themes = settings.savedThemes,
+                        selected = settings.seedColor.takeIf { settings.colorSource == ColorSource.CUSTOM },
+                        onSelect = onCustomSeedSelected,
+                        onRename = { renaming = it },
+                        onDelete = onDeleteTheme,
+                        onCreate = { sheet = SeedSheetMode.NEW },
+                    )
+                    // 色彩风格 steers the generator, and a 角色预设 never reaches it. Greyed rather than
+                    // hidden: it is still the answer for every other way of getting a colour, and a row
+                    // that vanished would read as one the app had lost.
+                    PaletteStyleRow(
+                        selected = settings.paletteStyle,
+                        onSelect = onPaletteStyleChange,
+                        enabled = activeCharacterPalette(settings) == null,
+                    )
+                }
             }
 
             SectionLabel(stringResource(Res.string.settings_theme_preview))
@@ -256,6 +282,9 @@ fun ThemeSettingsScreen(
         )
     }
 }
+
+/** How far the colour settings fade while a style with its own palette is in force. */
+private const val DIMMED_ALPHA = 0.45f
 
 /** The two ways into [SeedColorSheet]: 我的主题's 新建, and 自定义's 编辑 of the seed in use. */
 private enum class SeedSheetMode { NEW, EDIT }

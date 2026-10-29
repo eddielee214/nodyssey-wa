@@ -221,7 +221,13 @@ private fun HotListRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
+            .then(
+                if (selected) {
+                    Modifier.background(LocalPlazaLayers.current.selected ?: MaterialTheme.colorScheme.secondaryContainer)
+                } else {
+                    Modifier
+                },
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),

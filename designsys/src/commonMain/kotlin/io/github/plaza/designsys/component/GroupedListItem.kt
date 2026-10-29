@@ -122,7 +122,7 @@ fun GroupedListItem(
     val headline: @Composable () -> Unit = {
         Box(Modifier.onPlaced { textStart.headlinePlaced(it, rtl) }) { headlineContent() }
     }
-    val shape = groupShape(first, last)
+    val shape = groupShape(first, last, layers.cardRadius)
     val shapes =
         ListItemDefaults.shapes(
             shape = shape,
@@ -351,7 +351,7 @@ private fun Modifier.groupSlice(
 ): Modifier {
     val divider = if (first) Modifier else Modifier.groupDivider(layers, dividerStart)
     if (!drawCard) return then(divider)
-    val shape = groupShape(first, last)
+    val shape = groupShape(first, last, layers.cardRadius)
     val shadowed =
         if (!layers.shadows) {
             this
@@ -370,7 +370,7 @@ private fun Modifier.groupSlice(
     return shadowed
         .clip(shape)
         .background(layers.card)
-        .then(layers.cardBorder?.let { Modifier.groupOutline(it, first, last) } ?: Modifier)
+        .then(layers.cardBorder?.let { Modifier.groupOutline(it, first, last, layers) } ?: Modifier)
         .then(divider)
 }
 
@@ -383,13 +383,14 @@ private fun Modifier.groupOutline(
     color: Color,
     first: Boolean,
     last: Boolean,
+    layers: PlazaLayers,
 ): Modifier =
     drawWithContent {
         drawContent()
-        val stroke = 1.dp.toPx()
+        val stroke = layers.cardBorderWidth.toPx()
         val top = if (first) stroke / 2 else -stroke
         val bottom = if (last) size.height - stroke / 2 else size.height + stroke
-        val outline = groupShape(first, last).createOutline(Size(size.width - stroke, bottom - top), layoutDirection, this)
+        val outline = groupShape(first, last, layers.cardRadius).createOutline(Size(size.width - stroke, bottom - top), layoutDirection, this)
         translate(left = stroke / 2, top = top) { drawOutline(outline, color, style = Stroke(stroke)) }
     }
 

@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Shape
 import io.github.plaza.designsys.theme.ControlShape
 import io.github.plaza.designsys.theme.LocalPlazaLayers
@@ -14,7 +15,9 @@ import io.github.plaza.designsys.theme.LocalPlazaLayers
  * reads as a hole in whatever it sits on rather than as a place to type.
  */
 object PlazaFieldDefaults {
-    val shape: Shape = ControlShape
+    val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = ControlShape
 
     /**
      * On the page ([inCard] false) a field wears the card's white; inside a card it is a well in the
