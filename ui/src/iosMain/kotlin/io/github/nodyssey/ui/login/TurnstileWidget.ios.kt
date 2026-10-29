@@ -147,15 +147,25 @@ private class TurnstileHost(
      *
      * A count rather than a URL test: `loadHTMLString` navigates to the *base* URL, so "is this the
      * document we supplied?" and "is this somewhere the page decided to go?" look identical from the
-     * request. The widget's own iframe is a subframe load and never reaches here.
+     * request.
+     *
+     * Subframe loads are let through. WebKit asks this delegate about every frame, not only the main
+     * one, and the widget *is* a subframe — `challenges.cloudflare.com` in an iframe. Counted with the
+     * rest, the iframe was the second load and was cancelled, so the box stayed an empty white strip
+     * and 登录 never enabled. A request for a new window has no frame to load into and stays refused.
      */
     override fun webView(
         webView: WKWebView,
         decidePolicyForNavigationAction: WKNavigationAction,
         decisionHandler: (WKNavigationActionPolicy) -> Unit,
     ) {
-        val first = !hasLoaded
-        hasLoaded = true
+        val frame = decidePolicyForNavigationAction.targetFrame
+        if (frame != null && !frame.mainFrame) {
+            decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyAllow)
+            return
+        }
+        val first = frame != null && !hasLoaded
+        if (frame != null) hasLoaded = true
         decisionHandler(
             if (first) {
                 WKNavigationActionPolicy.WKNavigationActionPolicyAllow
