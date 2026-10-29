@@ -55,7 +55,6 @@ import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +67,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -156,7 +154,6 @@ import io.github.plaza.designsys.theme.Spacing
 import io.github.plaza.designsys.theme.cardBorder
 import io.github.plaza.designsys.theme.cardShadow
 import io.github.plaza.designsys.theme.readableWidth
-import io.github.plaza.designsys.theme.styledCorner
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -538,9 +535,7 @@ private fun OptionsButton(
 
 /** The pill's height and corners — the home screen's search pill (2a). */
 private val SearchFieldHeight = 40.dp
-private val SearchFieldShape: Shape
-    @Composable @ReadOnlyComposable
-    get() = RoundedCornerShape(styledCorner(12.dp))
+private val SearchFieldShape = RoundedCornerShape(12.dp)
 
 /** The keys inside the pill, drawn at 32dp; Material still hit-tests them at 48. */
 private val SearchKeySize = 32.dp

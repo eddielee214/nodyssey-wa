@@ -10,12 +10,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.nodyssey.data.settings.ColorSource
 import io.github.nodyssey.data.settings.PaletteStyle
 import io.github.nodyssey.data.settings.SettingsRepository
-import io.github.nodyssey.data.settings.UiStyle
 import io.github.nodyssey.data.settings.UserSettings
 import io.github.nodyssey.di.AppContainer
 import io.github.plaza.designsys.theme.PlazaCharacterPalette
 import io.github.plaza.designsys.theme.PlazaPaletteStyle
-import io.github.plaza.designsys.theme.PlazaUiStyle
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -91,10 +89,6 @@ class ThemeSettingsViewModel(
         viewModelScope.launch { settings.setPaletteStyle(value) }
     }
 
-    fun setUiStyle(value: UiStyle) {
-        viewModelScope.launch { settings.setUiStyle(value) }
-    }
-
     /** 保存为我的主题, and the rename that reuses it — see `SettingsRepository.saveTheme`. */
     fun saveTheme(name: String, argb: Int) {
         viewModelScope.launch { settings.saveTheme(name, argb) }
@@ -163,15 +157,6 @@ internal fun rememberActiveSeed(settings: UserSettings): Int {
  */
 internal fun activeCharacterPalette(settings: UserSettings): PlazaCharacterPalette? =
     if (settings.colorSource == ColorSource.PRESET) presetById(settings.presetId).palette else null
-
-/** `:designsys` cannot see this module's enum, so the two meet here — as [PaletteStyle.toPlaza] does. */
-internal fun UiStyle.toPlaza(): PlazaUiStyle =
-    when (this) {
-        UiStyle.LAYERED -> PlazaUiStyle.LAYERED
-        UiStyle.EDITORIAL -> PlazaUiStyle.EDITORIAL
-        UiStyle.INDUSTRIAL -> PlazaUiStyle.INDUSTRIAL
-        UiStyle.TERMINAL -> PlazaUiStyle.TERMINAL
-    }
 
 /** `:designsys` cannot see this module's enum, so the two meet here. */
 internal fun PaletteStyle.toPlaza(): PlazaPaletteStyle =

@@ -4,12 +4,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
-import io.github.plaza.designsys.theme.styledCorner
 
 /**
  * What every `ModalBottomSheet` in the app is given in place of Material's defaults: a 20dp top
@@ -19,9 +17,7 @@ import io.github.plaza.designsys.theme.styledCorner
  * radius and gives the 44dp of air around Material's handle back to the content under it.
  */
 object PlazaSheetDefaults {
-    val shape: Shape
-        @Composable @ReadOnlyComposable
-        get() = styledCorner(20.dp).let { RoundedCornerShape(topStart = it, topEnd = it) }
+    val shape: Shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
 
     /**
      * Material's [BottomSheetDefaults.DragHandle] — its bar, its colour and the description a screen

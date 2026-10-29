@@ -12,7 +12,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.plaza.designsys.theme.LocalPlazaExtraColors
 import io.github.plaza.designsys.theme.LocalPlazaFontScale
-import io.github.plaza.designsys.theme.styledCorner
 
 /**
  * A small tonal label — a board name, a category, a tag.
@@ -72,9 +70,7 @@ fun TonalTag(
 }
 
 /** A tag's corner — [TonalTag]'s, and anything drawn to sit in a row of them. */
-val TonalTagShape: Shape
-    @Composable @ReadOnlyComposable
-    get() = RoundedCornerShape(styledCorner(6.dp))
+val TonalTagShape: Shape = RoundedCornerShape(6.dp)
 
 /**
  * The tag's type, as a style rather than three arguments.

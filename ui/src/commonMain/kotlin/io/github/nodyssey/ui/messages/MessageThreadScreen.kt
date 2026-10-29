@@ -64,7 +64,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -174,7 +173,6 @@ import io.github.plaza.designsys.theme.cardBorder
 import io.github.plaza.designsys.theme.cardBorderStroke
 import io.github.plaza.designsys.theme.cardShadow
 import io.github.plaza.designsys.theme.floatShadow
-import io.github.plaza.designsys.theme.styledCorner
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -1278,12 +1276,8 @@ private fun Modifier.wrapContentWidthTo(isMine: Boolean): Modifier =
 private const val BUBBLE_MAX_WIDTH = 0.78f
 
 /** 3d's bubble corners: 20dp all round but the one pointing at its sender, which tucks in to 6dp. */
-private val THEIRS_SHAPE: Shape
-    @Composable @ReadOnlyComposable
-    get() = styledCorner(20.dp).let { RoundedCornerShape(it, it, it, styledCorner(6.dp)) }
-private val MINE_SHAPE: Shape
-    @Composable @ReadOnlyComposable
-    get() = styledCorner(20.dp).let { RoundedCornerShape(it, it, styledCorner(6.dp), it) }
+private val THEIRS_SHAPE: Shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp)
+private val MINE_SHAPE: Shape = RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp)
 
 /** How far a failed message fades, so the red line under it is what the eye lands on. */
 private const val FAILED_ALPHA = 0.72f

@@ -51,7 +51,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -65,7 +64,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -160,7 +158,6 @@ import io.github.plaza.designsys.theme.cardBorder
 import io.github.plaza.designsys.theme.cardBorderStroke
 import io.github.plaza.designsys.theme.cardShadow
 import io.github.plaza.designsys.theme.readableWidth
-import io.github.plaza.designsys.theme.styledCorner
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -1023,9 +1020,7 @@ private val HotListLeadingInset = 10.dp
 /** 28dp: the account's face at the end of the bar, drawn inside its 48dp target. */
 private val AccountAvatarSize = 28.dp
 
-private val AccountAvatarShape: Shape
-    @Composable @ReadOnlyComposable
-    get() = RoundedCornerShape(styledCorner(8.dp))
+private val AccountAvatarShape = RoundedCornerShape(8.dp)
 
 /** Where the account's 48dp target stops short of the edge — see the header row that uses it. */
 private val AccountEndInset = 2.dp

@@ -11,7 +11,6 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 
@@ -57,17 +56,6 @@ data class PlazaLayers(
     val shadows: Boolean,
     /** An outline for cards, where shadows cannot be drawn and tone cannot separate them (墨水屏). */
     val cardBorder: Color?,
-    /** How heavy [cardBorder] is drawn: a hairline everywhere but 工业's 2dp ink rules. */
-    val cardBorderWidth: Dp = 1.dp,
-    /** A content card's corner, and a grouped row's at the ends of its group; see [PlazaUiStyle]. */
-    val cardRadius: Dp = 16.dp,
-    /**
-     * Behind the row a detail pane is showing, or null for the scheme's `secondaryContainer`.
-     *
-     * A style whose `secondaryContainer` is an inverse — 工业's black, 终端's phosphor white — sets its
-     * own, because the row's text keeps its ordinary ink and would vanish into an inverse fill.
-     */
-    val selected: Color? = null,
 )
 
 /**
@@ -75,13 +63,13 @@ data class PlazaLayers(
  * there is no outline to draw, which is everywhere but 墨水屏.
  */
 val PlazaLayers.cardBorderStroke: BorderStroke?
-    get() = cardBorder?.let { BorderStroke(cardBorderWidth, it) }
+    get() = cardBorder?.let { BorderStroke(1.dp, it) }
 
 /** [PlazaLayers.cardBorder] around a node that takes no border of its own; nothing where there is none. */
 fun Modifier.cardBorder(
     layers: PlazaLayers,
     shape: Shape,
-): Modifier = layers.cardBorder?.let { border(layers.cardBorderWidth, it, shape) } ?: this
+): Modifier = layers.cardBorder?.let { border(1.dp, it, shape) } ?: this
 
 /**
  * Derives the layers from whichever scheme won — seed, character palette, system or 墨水屏 — so a

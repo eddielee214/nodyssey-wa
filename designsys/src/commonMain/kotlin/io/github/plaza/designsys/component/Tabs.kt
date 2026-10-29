@@ -16,7 +16,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +27,6 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -36,7 +34,6 @@ import io.github.plaza.designsys.theme.LocalPlazaLayers
 import io.github.plaza.designsys.theme.TABULAR_FIGURES
 import io.github.plaza.designsys.theme.cardBorder
 import io.github.plaza.designsys.theme.cardShadow
-import io.github.plaza.designsys.theme.styledCorner
 
 /**
  * One tab's label and, optionally, the count badge beside it — already formatted, so a caller that
@@ -180,19 +177,16 @@ private val PillTrackInset = 7.dp
 /** The thumb's margin inside the track. */
 private val PillThumbInset = 3.dp
 
-/** The track: [PillTrackInset] in from the top and the bottom, with 10dp corners (none, square styles). */
-private val PillTrackShape: Shape
-    @Composable @ReadOnlyComposable
-    get() = PillTrack(styledCorner(10.dp))
-
-private class PillTrack(private val corner: Dp) : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density,
-    ): Outline {
-        val inset = with(density) { PillTrackInset.toPx() }
-        val radius = with(density) { corner.toPx() }
-        return Outline.Rounded(RoundRect(0f, inset, size.width, size.height - inset, CornerRadius(radius)))
+/** The track: [PillTrackInset] in from the top and the bottom, with 10dp corners. */
+private val PillTrackShape: Shape =
+    object : Shape {
+        override fun createOutline(
+            size: Size,
+            layoutDirection: LayoutDirection,
+            density: Density,
+        ): Outline {
+            val inset = with(density) { PillTrackInset.toPx() }
+            val radius = with(density) { 10.dp.toPx() }
+            return Outline.Rounded(RoundRect(0f, inset, size.width, size.height - inset, CornerRadius(radius)))
+        }
     }
-}

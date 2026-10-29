@@ -36,33 +36,7 @@
   </tr>
 </table>
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/style-picker.png" width="190" alt="界面风格选择" /></td>
-    <td align="center"><img src="docs/screenshots/style-editorial.png" width="190" alt="纸刊风格" /></td>
-    <td align="center"><img src="docs/screenshots/style-industrial.png" width="190" alt="工业风格" /></td>
-    <td align="center"><img src="docs/screenshots/style-terminal.png" width="190" alt="终端风格" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>新增</b> 界面风格：四套视觉语言</td>
-    <td align="center"><b>纸刊</b> 暖白纸面 · 细线 · 衬线标题</td>
-    <td align="center"><b>工业</b> 直角 · 粗墨线 · 等宽注记</td>
-    <td align="center"><b>终端</b> 黑底等宽 · 网格线</td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/ipad-style-industrial.png" width="400" alt="iPad 工业风格" /></td>
-    <td align="center"><img src="docs/screenshots/ipad-style-terminal.png" width="400" alt="iPad 终端风格" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>iPad</b> 工业风格双栏</td>
-    <td align="center"><b>iPad</b> 终端风格双栏</td>
-  </tr>
-</table>
-
-<sub>截图来自 iOS 模拟器；iPad 为 13 英寸 iPad Pro，首页和热榜是横屏，风格截图是竖屏（竖屏同样是双栏）</sub>
+<sub>截图来自 iOS 模拟器，iPad 为 13 英寸 iPad Pro 横屏</sub>
 
 </div>
 
@@ -95,11 +69,6 @@ ipa **没有签名**，需要用你自己的 Apple ID 或证书签名后安装�
 
 **新增**
 
-- 界面风格：在「主题」里选，四套完全不同的视觉语言，配色、层次、圆角和字体一起变
-  - 轻盈层叠：原来的样子，灰底白卡、柔和阴影
-  - 纸刊：暖白纸面，卡片只靠一条细线分隔，小圆角，衬线标题，淡彩标签，深浅色都有
-  - 工业：瑞士工业印刷风，全部直角，2px 墨线粗框，超粗标题，等宽注记，警示红是唯一强调色，仅浅色
-  - 终端：老式终端风，近黑底、等宽字体、直角网格线、红色高亮，仅深色
 - iPad 适配，与 iPhone 共用同一个 ipa，iPhone 上的界面不变：
   - 窗口宽度不小于 840pt 时（横屏，或 13 英寸竖屏）切换为双栏：左栏 360pt 列表，右栏详情；首页、热榜、搜索、通知、个人空间，以及「我的」里的主题帖、评论、收藏、浏览历史均适用
   - 从列表打开帖子会替换右栏内容；帖子内的链接在右栏逐层打开，可以返回

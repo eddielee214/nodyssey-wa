@@ -13,7 +13,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -31,9 +30,7 @@ import io.github.plaza.designsys.theme.cardShadow
 val LayerCardRadius = 16.dp
 
 /** A content card's corners — see [LayerCardRadius]. */
-val LayerCardShape: Shape
-    @Composable @ReadOnlyComposable
-    get() = RoundedCornerShape(LocalPlazaLayers.current.cardRadius)
+val LayerCardShape: Shape = RoundedCornerShape(LayerCardRadius)
 
 /** What a card's content is inset by, unless it says otherwise. */
 private val LayerCardPadding = PaddingValues(12.dp)
@@ -70,7 +67,7 @@ fun LayerCard(
     val layers = LocalPlazaLayers.current
     val colors =
         CardDefaults.cardColors(
-            containerColor = if (selected) layers.selected ?: MaterialTheme.colorScheme.secondaryContainer else layers.card,
+            containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else layers.card,
         )
     val border = layers.cardBorderStroke
     val shadowed = modifier.cardShadow(shape, layers.shadows)

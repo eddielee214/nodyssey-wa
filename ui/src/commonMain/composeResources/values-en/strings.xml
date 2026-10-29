@@ -1633,17 +1633,4 @@
     <string name="hot_error_network">Couldn't reach bimg.eu.org. Check your connection or proxy and try again.</string>
     <string name="hot_error_unavailable">The hot list service is unavailable. Try again later.</string>
     <!-- hot:end -->
-    <string name="settings_ui_style">Interface style</string>
-    <string name="settings_ui_style_hint">A whole visual language: colours, layering, corners and type change together</string>
-    <string name="settings_ui_style_own_palette">This style brings its own colours; the colour settings below apply again under Layered</string>
-    <string name="ui_style_layered">Layered</string>
-    <string name="ui_style_layered_desc">Grey page · white cards · soft shadows</string>
-    <string name="ui_style_editorial">Editorial</string>
-    <string name="ui_style_editorial_desc">Warm paper · hairlines · serif titles</string>
-    <string name="ui_style_industrial">Industrial</string>
-    <string name="ui_style_industrial_desc">Square · heavy ink rules · light only</string>
-    <string name="ui_style_terminal">Terminal</string>
-    <string name="ui_style_terminal_desc">Black · monospace · grid · dark only</string>
-    <string name="ui_style_preview_title">A thread title</string>
-    <string name="ui_style_preview_meta">author · 3 min ago</string>
 </resources>

@@ -76,9 +76,6 @@ class SettingsRepository(
                 paletteStyle = preferences[KEY_PALETTE_STYLE]
                     ?.let { runCatching { PaletteStyle.valueOf(it) }.getOrNull() }
                     ?: PaletteStyle.SOFT,
-                uiStyle = preferences[KEY_UI_STYLE]
-                    ?.let { runCatching { UiStyle.valueOf(it) }.getOrNull() }
-                    ?: UiStyle.LAYERED,
                 savedThemes = decodeSavedThemes(preferences[KEY_SAVED_THEMES]),
                 fontScale = preferences[KEY_FONT_SCALE] ?: 1f,
                 oneHandMode = preferences[KEY_ONE_HAND_MODE] ?: true,
@@ -200,9 +197,6 @@ class SettingsRepository(
 
     /** 色彩风格 — how far the generated scheme travels from whichever seed is in force. */
     suspend fun setPaletteStyle(style: PaletteStyle) = edit { it[KEY_PALETTE_STYLE] = style.name }
-
-    /** 界面风格 — the visual language, which three of the four bring their own colours to. */
-    suspend fun setUiStyle(style: UiStyle) = edit { it[KEY_UI_STYLE] = style.name }
 
     /**
      * 我的主题 — appends, or renames in place when the colour is already saved.
@@ -614,7 +608,6 @@ class SettingsRepository(
         private val KEY_WALLPAPER_SYSTEM_PALETTE = booleanPreferencesKey("wallpaper_system_palette")
         private val KEY_WALLPAPER_AUTO_UPDATE = booleanPreferencesKey("wallpaper_auto_update")
         private val KEY_PALETTE_STYLE = stringPreferencesKey("palette_style")
-        private val KEY_UI_STYLE = stringPreferencesKey("ui_style")
         private val KEY_SAVED_THEMES = stringPreferencesKey("saved_themes")
 
         /** 石墨青, the colour the app has always been, now as the seed every scheme starts from. */
@@ -796,12 +789,6 @@ data class UserSettings(
     val wallpaperAutoUpdate: Boolean = false,
     /** 色彩风格 — applies to whichever seed is in force, and to all three sources alike. */
     val paletteStyle: PaletteStyle = PaletteStyle.SOFT,
-    /**
-     * 界面风格 — 轻盈层叠 by default, which is the app every earlier build drew. The other three replace
-     * the palette, the layering, the corners and the type together; see the design system's
-     * `PlazaUiStyle`.
-     */
-    val uiStyle: UiStyle = UiStyle.LAYERED,
     /** 我的主题 — hand-picked seeds the reader named and kept. Oldest first; see `saveTheme`. */
     val savedThemes: List<SavedTheme> = emptyList(),
     val fontScale: Float = 1f,
@@ -985,9 +972,6 @@ enum class ColorSource { PRESET, WALLPAPER, CUSTOM }
  * to survive a rename on either side of that line.
  */
 enum class PaletteStyle { SOFT, VIBRANT, EXPRESSIVE, NEUTRAL, MONOCHROME }
-
-/** 界面风格: 轻盈层叠, 纸刊, 工业, 终端. Stored by name, so the order here is free to change. */
-enum class UiStyle { LAYERED, EDITORIAL, INDUSTRIAL, TERMINAL }
 
 /**
  * One entry of 我的主题.

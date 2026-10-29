@@ -1625,17 +1625,4 @@
     <string name="hot_error_network">連不上 bimg.eu.org，檢查網路或代理後重試。</string>
     <string name="hot_error_unavailable">熱榜服務暫時無法使用，稍後再試。</string>
     <!-- hot:end -->
-    <string name="settings_ui_style">介面風格</string>
-    <string name="settings_ui_style_hint">換的是整套視覺語言：配色、層次、圓角和字體一起變</string>
-    <string name="settings_ui_style_own_palette">目前風格使用自帶配色，下面的配色設定在切回「輕盈層疊」後生效</string>
-    <string name="ui_style_layered">輕盈層疊</string>
-    <string name="ui_style_layered_desc">灰底白卡 · 柔和陰影</string>
-    <string name="ui_style_editorial">紙刊</string>
-    <string name="ui_style_editorial_desc">暖白紙面 · 細線 · 襯線標題</string>
-    <string name="ui_style_industrial">工業</string>
-    <string name="ui_style_industrial_desc">直角 · 粗墨線 · 僅淺色</string>
-    <string name="ui_style_terminal">終端</string>
-    <string name="ui_style_terminal_desc">黑底等寬 · 網格線 · 僅深色</string>
-    <string name="ui_style_preview_title">文章標題範例</string>
-    <string name="ui_style_preview_meta">作者 · 3 分鐘前</string>
 </resources>

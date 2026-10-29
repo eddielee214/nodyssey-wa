@@ -157,9 +157,6 @@ internal fun NodysseyChrome(
         // is on rather than left as a control that no longer moves anything.
         settings.einkMode -> false
 
-        // 工业 is ink on paper and 终端 a lit console: each has one answer to 明暗, and both lean on it.
-        settings.uiStyle.toPlaza().forcedDarkTheme != null -> settings.uiStyle.toPlaza().forcedDarkTheme == true
-
         else -> when (settings.themeMode) {
             ThemeMode.SYSTEM -> isSystemInDarkTheme()
             ThemeMode.LIGHT -> false
@@ -203,7 +200,6 @@ internal fun NodysseyChrome(
             // both want the same snapped motion scheme.
             reducedMotion = rememberReducedMotionEnabled() || settings.einkMode,
             einkMode = settings.einkMode,
-            uiStyle = settings.uiStyle.toPlaza(),
         ) {
             // Inside the theme on purpose: the system bar icons follow the answer PlazaTheme was just
             // given, not the OS's night mode — the same rule the Custom Tab colours already follow.

@@ -119,19 +119,13 @@ fun PlazaTheme(
      * have to pass both.
      */
     einkMode: Boolean = false,
-    /** 界面风格 — see [PlazaUiStyle]. 墨水屏模式 still wins over it. */
-    uiStyle: PlazaUiStyle = PlazaUiStyle.LAYERED,
     content: @Composable () -> Unit,
 ) {
-    // 墨水屏 is a statement about the panel, so it takes the default geometry and type as well as its
-    // own colours: a style's thin rules and pastels are exactly what a panel cannot show.
-    val style = if (einkMode) PlazaUiStyle.LAYERED else uiStyle
-    val stylePalette = style.colorScheme(darkTheme)
     // Asked for only when it could win: 角色预设 beats it, and building a scheme that is about to be
     // discarded is work on every recomposition of the whole app. Null means this platform — or this
     // Android version — has no system palette; see [platformSystemColorScheme].
     val systemColorScheme =
-        if (useSystemPalette && characterPalette == null && !einkMode && stylePalette == null) {
+        if (useSystemPalette && characterPalette == null && !einkMode) {
             platformSystemColorScheme(darkTheme)
         } else {
             null
@@ -139,9 +133,6 @@ fun PlazaTheme(
     val baseScheme =
         when {
             einkMode -> EInkColorScheme
-
-            // A style's world has its own ink; a seed would only tint it into something else.
-            stylePalette != null -> stylePalette
 
             characterPalette != null -> characterPalette.colorScheme(darkTheme)
 
@@ -154,10 +145,7 @@ fun PlazaTheme(
                     plazaSeedColorScheme(seedColor, darkTheme, paletteStyle)
                 }
         }
-    val layers =
-        remember(baseScheme, darkTheme, einkMode, style) {
-            if (einkMode) plazaLayers(baseScheme, darkTheme, einkMode = true) else style.layers(baseScheme, darkTheme)
-        }
+    val layers = remember(baseScheme, darkTheme, einkMode) { plazaLayers(baseScheme, darkTheme, einkMode) }
     // `background` is what `Scaffold` fills with by default and what nothing else in Material reads,
     // so pointing it at the page layer is the one edit that moves every screen onto the grey page.
     val colorScheme = remember(baseScheme, layers) { baseScheme.copy(background = layers.page) }
@@ -176,7 +164,6 @@ fun PlazaTheme(
         LocalPlazaFontScale provides fontScale.coerceIn(MIN_TYPE_SCALE, MAX_TYPE_SCALE),
         LocalOneHandMode provides oneHandMode,
         LocalEinkMode provides einkMode,
-        LocalPlazaUiStyle provides style,
         // Tonal elevation is a colour difference, and 墨水屏模式's container ladder has none left to
         // make. Turning it off here means a `Surface` handed a `tonalElevation` by some caller does
         // not go and compute one anyway — the scheme's intent holds even where a call site disagrees.
@@ -193,8 +180,8 @@ fun PlazaTheme(
             if (reducedMotion || einkMode) SnapMotionScheme else MotionScheme.expressive(),
             // Remembered rather than rebuilt: the scale only moves when the reading-size setting
             // does, and each call copies three TextStyles.
-            typography = remember(fontScale, style) { style.typography(plazaTypography(fontScale)) },
-            shapes = style.shapes,
+            typography = remember(fontScale) { plazaTypography(fontScale) },
+            shapes = PlazaShapes,
             content = content,
         )
     }
